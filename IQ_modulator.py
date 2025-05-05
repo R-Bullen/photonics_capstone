@@ -17,7 +17,7 @@ class IQModulator(i3.Circuit):
     pad = i3.ChildCellProperty(doc="the pad type")
 
     spacing_x = i3.PositiveNumberProperty(default=425.0, doc="Horizontal spacing between the splitter levels.")
-    spacing_y = i3.PositiveNumberProperty(default=125.0, doc="Vertical spacing between the splitters in each level.")
+    spacing_y = i3.PositiveNumberProperty(default=250.0, doc="Vertical spacing between the splitters in each level.")
 
     def _default_splitter(self):
         return asp.MMI1X2_TE1550_RIB()
@@ -37,8 +37,10 @@ class IQModulator(i3.Circuit):
         mzm_bottom = CustomMZModulator1x1(with_delays=False)
 
         insts = {
-            "splitter": self.splitter,
-            "combiner": self.combiner,
+            "splitter_0": self.splitter,
+            "combiner_0": self.combiner,
+            "splitter_1": self.splitter,
+            "combiner_1": self.combiner,
             "mzm_0": mzm_top,
             "mzm_1": mzm_bottom,
             # "gc_in": self.gc,
@@ -53,33 +55,38 @@ class IQModulator(i3.Circuit):
 
     def _default_specs(self):
         specs = [
-            i3.Place("splitter:in", (0,0)),
-            i3.Place("mzm_0:in", (self.spacing_x, self.spacing_y), relative_to="splitter:out1"),
+            i3.Place("splitter_0:in", (0,0)),
+            i3.Place("mzm_0:in", (self.spacing_x, self.spacing_y), relative_to="splitter_0:out1"),
             i3.FlipV("mzm_0"),
             i3.Place("mzm_1:out", (0, -self.spacing_y), relative_to="mzm_0:out"),
-            i3.Place("combiner:in1", (self.spacing_x, -self.spacing_y), relative_to="mzm_0:out"),
+            i3.Place("combiner_0:in1", (self.spacing_x, self.spacing_y/2), relative_to="ps:out"),
+            i3.Place("splitter_1:in", (self.spacing_x, -self.spacing_y), relative_to="splitter_0:out2"),
             i3.Place("pad_0:m1", (self.spacing_x * 3, -self.spacing_y * 4), relative_to="mzm_1:in"),
             i3.Place("pad_1:m1", (self.spacing_x * 2, -self.spacing_y * 4), relative_to="mzm_1:in"),
             i3.Place("pad_2:m1", (self.spacing_x * 4, -self.spacing_y * 4), relative_to="mzm_1:in"),
-            # i3.ConnectManhattan([
-            #     ("mmi1x2:out1", "mzm_0:in"),
-            #     ("mmi1x2:out2", "mzm_1:in"),
-            #     ("mzm_0:out", "mmi2x1:in1"),
-            #     ("ps:out", "mmi2x1:in2"),
-            # ]),
             i3.Join([
-                # ("gc_in:out", "mmi1x2:in"),
                 ("mzm_1:out", "ps:in"),
-                # ("mmi2x1:out", "gc_out:out"),
+                ("splitter_1:out1", "combiner_1:in1"),
+                ("splitter_1:out2", "combiner_1:in2"),
             ]),
+            i3.ConnectBend([
+                ("splitter_0:out1", "mzm_0:in"),
+                ("splitter_0:out2", "splitter_1:in"),
+                ("combiner_1:out", "mzm_1:in"),
+                ("mzm_0:out", "combiner_0:in1"),
+                ("ps:out", "combiner_0:in2"),
+            ]),
+            i3.ConnectElectrical([
+
+            ])
         ]
 
         return specs
 
     def _default_exposed_ports(self):
         exposed_ports = {
-            "splitter:in": "in",
-            "combiner:out": "out",
+            "splitter_0:in": "in",
+            "combiner_0:out": "out",
         }
 
         return exposed_ports
