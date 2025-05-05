@@ -1,8 +1,7 @@
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
 
-from mzm_custom import MZModulator1x1
-# asp.MZModulator1x1()
+from mzm_custom import MZModulator1x1 as CustomMZModulator1x1
 
 # MMI1x2 -> MZM           -> MMI2x1
 #        -> MZM (shifted) ->
@@ -14,7 +13,8 @@ class IQModulator(i3.Circuit):
     # gc = i3.ChildCellProperty(doc="Grating coupler used.")
     splitter = i3.ChildCellProperty(doc="the splitter")
     combiner = i3.ChildCellProperty(doc="the combiner")
-
+    ps = i3.ChildCellProperty(doc="the phase shifter")
+    pad = i3.ChildCellProperty(doc="the pad type")
 
     spacing_x = i3.PositiveNumberProperty(default=425.0, doc="Horizontal spacing between the splitter levels.")
     spacing_y = i3.PositiveNumberProperty(default=125.0, doc="Vertical spacing between the splitters in each level.")
@@ -25,14 +25,16 @@ class IQModulator(i3.Circuit):
     def _default_combiner(self):
         return asp.MMI2X1_TE1550_RIB()
 
-    # def _default_gc(self):
-    #     return asp.GRATING_COUPLER_TE1550_RIBY()
+    def _default_ps(self):
+        return asp.PhaseShifter()
+
+    def _default_pad(self):
+        return asp.ELECTRICAL_PAD_100100()
+
 
     def _default_insts(self):
-        mzm_top = MZModulator1x1(with_delays=True)
-        mzm_bottom = MZModulator1x1(with_delays=False)
-        ps = asp.PhaseShifter() # connect later
-        pad = asp.ELECTRICAL_PAD_100100()
+        mzm_top = CustomMZModulator1x1(with_delays=True, bend_to_phase_shifter_dist=500)
+        mzm_bottom = CustomMZModulator1x1(with_delays=False)
 
         insts = {
             "splitter": self.splitter,
@@ -41,10 +43,10 @@ class IQModulator(i3.Circuit):
             "mzm_1": mzm_bottom,
             # "gc_in": self.gc,
             # "gc_out": self.gc,
-            "ps": ps,
-            "pad_0": pad, # GND pad
-            "pad_1": pad, # pad for top mzm
-            "pad_2": pad, # pad for bottom mzm
+            "ps": self.ps,
+            "pad_0": self.pad, # GND pad
+            "pad_1": self.pad, # pad for top mzm
+            "pad_2": self.pad, # pad for bottom mzm
         }
 
         return insts
@@ -54,7 +56,7 @@ class IQModulator(i3.Circuit):
             i3.Place("splitter:in", (0,0)),
             i3.Place("mzm_0:in", (self.spacing_x, self.spacing_y), relative_to="splitter:out1"),
             i3.FlipV("mzm_0"),
-            i3.Place("mzm_1:in", (self.spacing_x, -self.spacing_y), relative_to="splitter:out2"),
+            i3.Place("mzm_1:out", (0, -self.spacing_y), relative_to="mzm_0:out"),
             i3.Place("combiner:in1", (self.spacing_x, -self.spacing_y), relative_to="mzm_0:out"),
             i3.Place("pad_0:m1", (self.spacing_x * 3, -self.spacing_y * 4), relative_to="mzm_1:in"),
             i3.Place("pad_1:m1", (self.spacing_x * 2, -self.spacing_y * 4), relative_to="mzm_1:in"),
