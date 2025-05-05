@@ -277,6 +277,9 @@ class _MZM(i3.PCell):
     delay_at_input = i3.BoolProperty(default=True,
                                      doc="if True, the delays are at the input side, else at the output side")
 
+    bend_to_phase_shifter_dist = i3.NonNegativeNumberProperty(default=0,
+                                                           doc="distance between the delay bends and the phase shifter")
+
     phase_modulator=i3.ChildCellProperty(locked=True, doc="the rf electrode with two waveguides in the gaps")
 
     def _default_splitter(self):
@@ -389,13 +392,13 @@ class _MZM(i3.PCell):
                                      self.combiner.ports['in1'].position[0]
 
                     splitter_pos_x = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[0] - self.bend_radius * 4 - \
-                                     self.splitter.ports['out1'].position[0] - straight_stub_length
+                                     self.splitter.ports['out1'].position[0] - straight_stub_length - self.bend_to_phase_shifter_dist
                 else:
                     combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_radius * 4 + straight_stub_length * 2 - \
                                      self.combiner.ports['in1'].position[0]
 
                     splitter_pos_x = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[0] - self.bend_length - \
-                                     self.splitter.ports['out1'].position[0] - straight_stub_length
+                                     self.splitter.ports['out1'].position[0] - straight_stub_length - self.bend_to_phase_shifter_dist
 
             else:
                 combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
@@ -563,4 +566,8 @@ class MZModulator2x2(_MZM):
 
     def _default_combiner(self):
         return MMI2X2_TE1550_RIB()
+
+if __name__ == '__main__':
+    mzm = MZModulator1x1()
+    mzm.Layout().visualize(annotate=True)
 
