@@ -3,6 +3,7 @@ import ipkiss3.all as i3
 
 from mzm_custom import MZModulator1x1 as CustomMZModulator1x1
 
+
 # MMI1x2 -> MZM           -> MMI2x1
 #        -> MZM (shifted) ->
 
@@ -15,6 +16,7 @@ class IQModulator(i3.Circuit):
     combiner = i3.ChildCellProperty(doc="the combiner")
     ps = i3.ChildCellProperty(doc="the phase shifter")
     pad = i3.ChildCellProperty(doc="the pad type")
+    wire = i3.ChildCellProperty(doc="wire template")
 
     spacing_x = i3.PositiveNumberProperty(default=425.0, doc="Horizontal spacing between the splitter levels.")
     spacing_y = i3.PositiveNumberProperty(default=250.0, doc="Vertical spacing between the splitters in each level.")
@@ -31,6 +33,8 @@ class IQModulator(i3.Circuit):
     def _default_pad(self):
         return asp.ELECTRICAL_PAD_100100()
 
+    def _default_wire(self):
+        return asp.MetalWireTemplate()
 
     def _default_insts(self):
         mzm_top = CustomMZModulator1x1(with_delays=True, bend_to_phase_shifter_dist=500)
@@ -61,9 +65,9 @@ class IQModulator(i3.Circuit):
             i3.Place("mzm_1:out", (0, -self.spacing_y), relative_to="mzm_0:out"),
             i3.Place("combiner_0:in1", (self.spacing_x, self.spacing_y/2), relative_to="ps:out"),
             i3.Place("splitter_1:in", (self.spacing_x, -self.spacing_y), relative_to="splitter_0:out2"),
-            i3.Place("pad_0:m1", (self.spacing_x * 3, -self.spacing_y * 4), relative_to="mzm_1:in"),
-            i3.Place("pad_1:m1", (self.spacing_x * 2, -self.spacing_y * 4), relative_to="mzm_1:in"),
-            i3.Place("pad_2:m1", (self.spacing_x * 4, -self.spacing_y * 4), relative_to="mzm_1:in"),
+            i3.Place("pad_0:m1", (5000, -750)), # left pad
+            i3.Place("pad_1:m1", (5500, -750)), # middle pad
+            i3.Place("pad_2:m1", (6000, -750)), # right pad
             i3.Join([
                 ("mzm_1:out", "ps:in"),
                 ("splitter_1:out1", "combiner_1:in1"),
@@ -76,9 +80,34 @@ class IQModulator(i3.Circuit):
                 ("mzm_0:out", "combiner_0:in1"),
                 ("ps:out", "combiner_0:in2"),
             ]),
-            i3.ConnectElectrical([
-
-            ])
+            i3.ConnectElectrical(
+                [("mzm_1:m1_1", "pad_0:m1")],
+                trace_template=self.wire,
+                start_angle=-90,
+                end_angle=0,
+                control_points=[i3.H(-400), i3.V(5000)],
+            ),
+            i3.ConnectElectrical(
+                [("mzm_1:m1_2", "pad_1:m1")],
+                trace_template=self.wire,
+                start_angle=-90,
+                end_angle=90,
+                control_points=[i3.H(-300), i3.V(5500)],
+            ),
+            i3.ConnectElectrical(
+                [("ps:m1", "pad_1:m1")],
+                trace_template=self.wire,
+                start_angle=-90,
+                end_angle=90,
+                control_points=[i3.H(-300), i3.V(5500)],
+            ),
+            i3.ConnectElectrical(
+                [("ps:m2", "pad_2:m1")],
+                trace_template=self.wire,
+                start_angle=-90,
+                end_angle=180,
+                control_points=[i3.H(-400), i3.V(6000)],
+            ),
         ]
 
         return specs
