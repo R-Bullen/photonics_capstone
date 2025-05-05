@@ -17,6 +17,7 @@ class IQModulator(i3.Circuit):
     ps = i3.ChildCellProperty(doc="the phase shifter")
     pad = i3.ChildCellProperty(doc="the pad type")
     wire = i3.ChildCellProperty(doc="wire template")
+    gc = i3.ChildCellProperty(doc="grating coupler")
 
     spacing_x = i3.PositiveNumberProperty(default=425.0, doc="Horizontal spacing between the splitter levels.")
     spacing_y = i3.PositiveNumberProperty(default=250.0, doc="Vertical spacing between the splitters in each level.")
@@ -36,6 +37,9 @@ class IQModulator(i3.Circuit):
     def _default_wire(self):
         return asp.MetalWireTemplate()
 
+    def _default_gc(self):
+        return asp.GRATING_COUPLER_TE1550_RIBZ()
+
     def _default_insts(self):
         mzm_top = CustomMZModulator1x1(with_delays=True, bend_to_phase_shifter_dist=500)
         mzm_bottom = CustomMZModulator1x1(with_delays=False)
@@ -47,8 +51,8 @@ class IQModulator(i3.Circuit):
             "combiner_1": self.combiner,
             "mzm_0": mzm_top,
             "mzm_1": mzm_bottom,
-            # "gc_in": self.gc,
-            # "gc_out": self.gc,
+            "gc_in": self.gc,
+            "gc_out": self.gc,
             "ps": self.ps,
             "pad_0": self.pad, # GND pad
             "pad_1": self.pad, # pad for top mzm
@@ -68,6 +72,8 @@ class IQModulator(i3.Circuit):
             i3.Place("pad_0:m1", (5000, -750)), # left pad
             i3.Place("pad_1:m1", (5500, -750)), # middle pad
             i3.Place("pad_2:m1", (6000, -750)), # right pad
+            i3.Place("gc_in:out", (5000, 1100), angle=-90),
+            i3.Place("gc_out:out", (6000, 1100), angle=-90),
             i3.Join([
                 ("mzm_1:out", "ps:in"),
                 ("splitter_1:out1", "combiner_1:in1"),
@@ -80,33 +86,39 @@ class IQModulator(i3.Circuit):
                 ("mzm_0:out", "combiner_0:in1"),
                 ("ps:out", "combiner_0:in2"),
             ]),
+            i3.ConnectManhattan([
+                ("gc_in:out", "splitter_0:in"),
+                ("gc_out:out", "combiner_0:out"),
+                ],
+                control_points=[i3.H(800)]
+            ),
             i3.ConnectElectrical(
                 [("mzm_1:m1_1", "pad_0:m1")],
                 trace_template=self.wire,
                 start_angle=-90,
                 end_angle=0,
-                control_points=[i3.H(-400), i3.V(5000)],
+                control_points=[i3.H(-400)],
             ),
             i3.ConnectElectrical(
                 [("mzm_1:m1_2", "pad_1:m1")],
                 trace_template=self.wire,
                 start_angle=-90,
                 end_angle=90,
-                control_points=[i3.H(-300), i3.V(5500)],
+                control_points=[i3.H(-300)],
             ),
             i3.ConnectElectrical(
                 [("ps:m1", "pad_1:m1")],
                 trace_template=self.wire,
                 start_angle=-90,
                 end_angle=90,
-                control_points=[i3.H(-300), i3.V(5500)],
+                control_points=[i3.H(-300)],
             ),
             i3.ConnectElectrical(
                 [("ps:m2", "pad_2:m1")],
                 trace_template=self.wire,
                 start_angle=-90,
                 end_angle=180,
-                control_points=[i3.H(-400), i3.V(6000)],
+                control_points=[i3.H(-400)],
             ),
         ]
 
@@ -114,8 +126,8 @@ class IQModulator(i3.Circuit):
 
     def _default_exposed_ports(self):
         exposed_ports = {
-            "splitter_0:in": "in",
-            "combiner_0:out": "out",
+            "gc_in:vertical_in": "in",
+            "gc_out:vertical_in": "out",
         }
 
         return exposed_ports
