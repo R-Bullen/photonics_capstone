@@ -53,6 +53,7 @@ class IQModulator(i3.Circuit):
         specs = [
             i3.Place("splitter:in", (0,0)),
             i3.Place("mzm_0:in", (self.spacing_x, self.spacing_y), relative_to="splitter:out1"),
+            i3.FlipV("mzm_0"),
             i3.Place("mzm_1:in", (self.spacing_x, -self.spacing_y), relative_to="splitter:out2"),
             i3.Place("combiner:in1", (self.spacing_x, -self.spacing_y), relative_to="mzm_0:out"),
             i3.Place("pad_0:m1", (self.spacing_x * 3, -self.spacing_y * 4), relative_to="mzm_1:in"),
