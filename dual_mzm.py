@@ -78,7 +78,6 @@ class CPWElectrode(i3.PCell):
             he_taper_shape.close()
             elems += i3.Boundary(layer=self.layer, shape=he_taper_shape)
 
-            # TODO: don't hardcode the translationn
             # boundary for bottom signal electrode
             elems += i3.Boundary(layer=self.layer, shape=he_taper_shape,
                                  transformation=i3.Translation((0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))))
@@ -108,37 +107,32 @@ class CPWElectrode(i3.PCell):
 
             elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape)
 
-            # Bottom ground plane
+            # middle ground plane
+            elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape.v_mirror_copy(),
+                                 transformation=i3.Translation((0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))))
 
-            # elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape.v_mirror_copy(),
-            #                      transformation=i3.Translation((0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))))
-
-            # middle_grnd_taper_shape = (grnd_taper_shape1 + # grnd_taper_shape2 +
-            #                            # grnd_taper_shape2.h_mirror_copy().reverse() +
-            #                            grnd_taper_shape1.h_mirror_copy().reverse() +
-            #                            grnd_taper_shape1.translate_copy(
-            #                                (0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))).v_mirror_copy().reverse() +
-            #                            grnd_taper_shape1.translate_copy(
-            #                                (0, -(self.ground_width + self.electrode_gap + self.hot_taper_width))).c_mirror_copy().reverse()
-            #                            )
-            # middle_grnd_taper_shape.close()
-
+            # the shape of the end of the middle gnd electrode
             grnd_taper_shape3 = ( grnd_taper_shape1 +
                             grnd_taper_shape1.translate_copy(
                                 (0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))).v_mirror_copy().reverse()
                             )
-            test_shape = (grnd_taper_shape3 + grnd_taper_shape3.translate_copy((0, -(self.ground_width + self.electrode_gap + self.hot_taper_width))).h_mirror_copy().v_mirror_copy())
-            test_shape.close()
 
-            elems += i3.Boundary(layer=self.layer, shape=test_shape,
+            # shape combining the two ends of the middle gnd electrode into one shape
+            middle_grnd_taper_shape = (grnd_taper_shape3 +
+                                       grnd_taper_shape3.translate_copy((0, -(self.ground_width + self.electrode_gap + self.hot_taper_width))).h_mirror_copy().v_mirror_copy())
+            middle_grnd_taper_shape.close()
+
+            # bottom ground plane
+            elems += i3.Boundary(layer=self.layer, shape=middle_grnd_taper_shape,
                                  transformation=i3.Translation(
                                      (0, -(self.ground_width + self.electrode_gap + self.hot_taper_width))))
 
             # CLADDING
             # Expand the waveguide cladding region under the electrode
-            # elems += i3.Rectangle(self.waveguide_cladding_layer, center=(0.0, 0.0),
-            #                       box_size=(self.electrode_length + self.taper_length * 2,
-            #                                 self.hot_width + self.electrode_gap * 2 + self.ground_width * 2))
+            elems += i3.Rectangle(self.waveguide_cladding_layer,
+                                  center=(0.0, -(self.ground_width + self.electrode_gap + self.hot_taper_width) /2 ),
+                                  box_size=(self.electrode_length + self.taper_length * 2,
+                                            self.hot_width * 2 + self.electrode_gap * 4 + self.ground_width * 3))
 
             # Electrode opening windows
             # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
