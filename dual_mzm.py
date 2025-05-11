@@ -78,6 +78,11 @@ class CPWElectrode(i3.PCell):
             he_taper_shape.close()
             elems += i3.Boundary(layer=self.layer, shape=he_taper_shape)
 
+            # TODO: don't hardcode the translationn
+            # boundary for bottom signal electrode
+            elems += i3.Boundary(layer=self.layer, shape=he_taper_shape,
+                                 transformation=i3.Translation((0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))))
+
             # Top ground plane
             grnd_taper_shape1 = i3.ShapeRound(original_shape=[(-self.electrode_length * 0.5, self.hot_width * 0.5 + self.electrode_gap),
                                                               (-self.electrode_length * 0.5 - self.taper_straight_length,
@@ -95,74 +100,123 @@ class CPWElectrode(i3.PCell):
                                                  (-self.electrode_length * 0.5,
                                                   self.hot_width * 0.5 + self.electrode_gap + self.ground_width)])
 
-            top_grnd_taper_shape = grnd_taper_shape1 + grnd_taper_shape2 +  grnd_taper_shape2.h_mirror_copy().reverse() + grnd_taper_shape1.h_mirror_copy().reverse()
+            top_grnd_taper_shape = (grnd_taper_shape1 + grnd_taper_shape2 +
+                                    grnd_taper_shape2.h_mirror_copy().reverse() +
+                                    grnd_taper_shape1.h_mirror_copy().reverse())
             top_grnd_taper_shape.close()
+
+
             elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape)
 
             # Bottom ground plane
 
-            elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape.v_mirror_copy())
+            # elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape.v_mirror_copy(),
+            #                      transformation=i3.Translation((0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))))
 
+            # middle_grnd_taper_shape = (grnd_taper_shape1 + # grnd_taper_shape2 +
+            #                            # grnd_taper_shape2.h_mirror_copy().reverse() +
+            #                            grnd_taper_shape1.h_mirror_copy().reverse() +
+            #                            grnd_taper_shape1.translate_copy(
+            #                                (0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))).v_mirror_copy().reverse() +
+            #                            grnd_taper_shape1.translate_copy(
+            #                                (0, -(self.ground_width + self.electrode_gap + self.hot_taper_width))).c_mirror_copy().reverse()
+            #                            )
+            # middle_grnd_taper_shape.close()
+
+            grnd_taper_shape3 = ( grnd_taper_shape1 +
+                            grnd_taper_shape1.translate_copy(
+                                (0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))).v_mirror_copy().reverse()
+                            )
+            test_shape = (grnd_taper_shape3 + grnd_taper_shape3.translate_copy((0, -(self.ground_width + self.electrode_gap + self.hot_taper_width))).h_mirror_copy().v_mirror_copy())
+            test_shape.close()
+
+            elems += i3.Boundary(layer=self.layer, shape=test_shape,
+                                 transformation=i3.Translation(
+                                     (0, -(self.ground_width + self.electrode_gap + self.hot_taper_width))))
+
+            # CLADDING
             # Expand the waveguide cladding region under the electrode
-            elems += i3.Rectangle(self.waveguide_cladding_layer, center=(0.0, 0.0),
-                                  box_size=(self.electrode_length + self.taper_length * 2,
-                                            self.hot_width + self.electrode_gap * 2 + self.ground_width * 2))
+            # elems += i3.Rectangle(self.waveguide_cladding_layer, center=(0.0, 0.0),
+            #                       box_size=(self.electrode_length + self.taper_length * 2,
+            #                                 self.hot_width + self.electrode_gap * 2 + self.ground_width * 2))
 
-            # Electrode openning windows
-            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-                                  center=(-self.electrode_length * 0.5 - self.taper_length + 25, 0),
-                                  box_size = (55, self.hot_taper_width + 4)
-                                  )
-
-            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-                                  center=(-self.electrode_length * 0.5 - self.taper_length + 50,
-                                          (self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
-                                  box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
-                                  )
-
-            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-                                  center=(-self.electrode_length * 0.5 - self.taper_length + 50,
-                                          -(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
-                                  box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
-                                  )
-
-            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-                                  center=(self.electrode_length * 0.5 + self.taper_length - 25, 0),
-                                  box_size = (55, self.hot_taper_width + 4)
-                                  )
-
-            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-                                  center=(self.electrode_length * 0.5 + self.taper_length - 50,
-                                          (self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
-                                  box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
-                                  )
-
-            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-                                  center=(self.electrode_length * 0.5 + self.taper_length - 50,
-                                          -(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
-                                  box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
-                                  )
+            # Electrode opening windows
+            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+            #                       center=(-self.electrode_length * 0.5 - self.taper_length + 25, 0),
+            #                       box_size = (55, self.hot_taper_width + 4)
+            #                       )
+            #
+            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+            #                       center=(-self.electrode_length * 0.5 - self.taper_length + 50,
+            #                               (self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
+            #                       box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+            #                       )
+            #
+            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+            #                       center=(-self.electrode_length * 0.5 - self.taper_length + 50,
+            #                               -(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
+            #                       box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+            #                       )
+            #
+            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+            #                       center=(self.electrode_length * 0.5 + self.taper_length - 25, 0),
+            #                       box_size = (55, self.hot_taper_width + 4)
+            #                       )
+            #
+            # # top right rectangle
+            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+            #                       center=(self.electrode_length * 0.5 + self.taper_length - 50,
+            #                               (self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
+            #                       box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+            #                       )
+            #
+            # # middle right large rectangle
+            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+            #                       center=(self.electrode_length * 0.5 + self.taper_length - 50, 0),
+            #                       box_size=(105,
+            #                                 self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+            #                       )
+            #
+            # # bottom right large rectangle
+            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+            #                       center=(self.electrode_length * 0.5 + self.taper_length - 50,
+            #                               -(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
+            #                       box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+            #                       )
 
             return elems
 
         def _generate_ports(self, ports):
             ports += i3.ElectricalPort(
-                name="signal",
+                name="top_ground",
+                position=(-self.electrode_length * 0.5 - self.taper_length + self.taper_straight_length,
+                          (self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) / 2),
+                layer=self.layer
+            )
+            ports += i3.ElectricalPort(
+                name="top_signal",
+                position=(-self.electrode_length * 0.5 - self.taper_length + self.taper_straight_length, 0),
+                layer=self.layer
+            )
+            ports += i3.ElectricalPort(
+                name="middle_ground",
+                position=(-self.electrode_length * 0.5 - self.taper_length + self.taper_straight_length,
+                          -(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
+                layer=self.layer
+            )
+            ports += i3.ElectricalPort(
+                name="bottom_signal",
                 position=(-self.electrode_length * 0.5 - self.taper_length + self.taper_straight_length, 0),
                 layer=self.layer
             )
             ports += i3.ElectricalPort(
                 name="bottom_ground",
                 position=(-self.electrode_length * 0.5 - self.taper_length + self.taper_straight_length,
-                          -(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
+                          -2*(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) / 2),
                 layer=self.layer
             )
-            ports += i3.ElectricalPort(
-                name="top_ground",
-                position=(-self.electrode_length * 0.5 - self.taper_length + self.taper_straight_length,
-                          (self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
-                layer=self.layer
-            )
+
+
 
             return ports
 
@@ -184,7 +238,7 @@ class CPWElectrodeWithWaveguides(i3.PCell):
 
         electrode_length = i3.PositiveNumberProperty(default=7000.0, doc="the length of the electrode")
         hot_width = i3.PositiveNumberProperty(default=23.0, doc="width of the hot electrode")
-        ground_width = i3.PositiveNumberProperty(default=150.0, doc="width of the ground planes")
+        ground_width = i3.PositiveNumberProperty(default=50.0, doc="width of the ground planes")
         electrode_gap = i3.PositiveNumberProperty(default=6.0, doc="gap between hot electrode and ground plane")
         taper_length = i3.PositiveNumberProperty(default=200.0, doc="the length of the taper")
         hot_taper_width = i3.PositiveNumberProperty(default=50.0,
@@ -215,9 +269,18 @@ class CPWElectrodeWithWaveguides(i3.PCell):
             bottom_waveguide = RoundedRibWaveguide(trace_template=self.trace_template, name="bottom_wg")
             bottom_waveguide_lo = bottom_waveguide.Layout(shape=rf_electrode_lo.bottom_centre_line_shape, bend_radius=self.bend_radius, angle_step=0.1)
 
+            top_waveguide_2 = RoundedRibWaveguide(trace_template=self.trace_template, name="top_wg_2")
+            top_waveguide_lo_2 = top_waveguide_2.Layout(shape=rf_electrode_lo.top_centre_line_shape,
+                                                    bend_radius=self.bend_radius, angle_step=0.1)
+            bottom_waveguide_2 = RoundedRibWaveguide(trace_template=self.trace_template, name="bottom_wg_2")
+            bottom_waveguide_lo_2 = bottom_waveguide_2.Layout(shape=rf_electrode_lo.bottom_centre_line_shape,
+                                                          bend_radius=self.bend_radius, angle_step=0.1)
+
             insts += i3.SRef(rf_electrode, position=(0, 0), name="electrode")
             insts += i3.SRef(top_waveguide, position=(0, 0), name="top_wg")
             insts += i3.SRef(bottom_waveguide, position=(0, 0), name="bottom_wg")
+            insts += i3.SRef(top_waveguide_2, position=(0, 0), name="top_wg_2")
+            insts += i3.SRef(bottom_waveguide_2, position=(0, 0), name="bottom_wg_2")
 
             return insts
 
@@ -227,9 +290,15 @@ class CPWElectrodeWithWaveguides(i3.PCell):
                                     'top_wg:out': 'top_out',
                                     'bottom_wg:in': 'bottom_in',
                                     'bottom_wg:out': 'bottom_out',
-                                    'electrode:signal': 'signal',
+                                    'top_wg_2:in': 'top_2_in',
+                                    'top_wg_2:out': 'top_2_out',
+                                    'bottom_wg_2:in': 'bottom_2_in',
+                                    'bottom_wg_2:out': 'bottom_2_out',
+                                    'electrode:top_signal': 'signal',
+                                    'electrode:top_ground': 'bottom_ground',
+                                    'electrode:middle_ground': 'top_ground',
+                                    'electrode:bottom_signal': 'signal',
                                     'electrode:bottom_ground': 'bottom_ground',
-                                    'electrode:top_ground': 'top_ground',
                                     })
 
     class Netlist(i3.NetlistFromLayout):
@@ -531,7 +600,7 @@ class _MZM(i3.PCell):
 
             return i3.HierarchicalModel.from_netlistview(self.netlist_view)
 
-class DualMZM2x2(_MZM):
+class DualMZM1x1(_MZM):
     # contains a top and bottom modulator with overlapping signal electrode
 
     pass
