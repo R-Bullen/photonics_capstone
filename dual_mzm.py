@@ -76,11 +76,12 @@ class CPWElectrode(i3.PCell):
 
             #he_taper_shape = he_taper_shape1 + he_taper_shape2 + he_taper_shape2.h_mirror_copy().reverse() + he_taper_shape1.h_mirror_copy().reverse()
             he_taper_shape.close()
-            elems += i3.Boundary(layer=self.layer, shape=he_taper_shape)
+            elems += i3.Boundary(layer=self.layer, shape=he_taper_shape,
+                                 transformation=i3.Translation((0, 1.5*(self.ground_width + self.taper_gap + self.hot_width))))
 
             # boundary for bottom signal electrode
             elems += i3.Boundary(layer=self.layer, shape=he_taper_shape,
-                                 transformation=i3.Translation((0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))))
+                                 transformation=i3.Translation((0,-1.5*(self.ground_width + self.taper_gap + self.hot_width))))
 
             # Top ground plane
             grnd_taper_shape1 = i3.ShapeRound(original_shape=[(-self.electrode_length * 0.5, self.hot_width * 0.5 + self.electrode_gap),
@@ -105,78 +106,79 @@ class CPWElectrode(i3.PCell):
             top_grnd_taper_shape.close()
 
 
-            elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape)
+            elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape,
+                                 transformation=i3.Translation((0, -1.5*(self.ground_width + self.taper_gap + self.hot_width))))
 
             # middle ground plane
             elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape.v_mirror_copy(),
-                                 transformation=i3.Translation((0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))))
+                                 transformation=i3.Translation((0,-(self.ground_width + self.taper_gap + self.hot_width))))
 
             # the shape of the end of the middle gnd electrode
             grnd_taper_shape3 = ( grnd_taper_shape1 +
                             grnd_taper_shape1.translate_copy(
-                                (0,-(self.ground_width + self.electrode_gap + self.hot_taper_width))).v_mirror_copy().reverse()
+                                (0,-(self.ground_width + self.taper_gap + self.hot_width))).v_mirror_copy().reverse()
                             )
 
             # shape combining the two ends of the middle gnd electrode into one shape
             middle_grnd_taper_shape = (grnd_taper_shape3 +
-                                       grnd_taper_shape3.translate_copy((0, -(self.ground_width + self.electrode_gap + self.hot_taper_width))).h_mirror_copy().v_mirror_copy())
+                                       grnd_taper_shape3.translate_copy((0, -(self.ground_width + self.taper_gap + self.hot_width))).h_mirror_copy().v_mirror_copy())
             middle_grnd_taper_shape.close()
 
             # bottom ground plane
             elems += i3.Boundary(layer=self.layer, shape=middle_grnd_taper_shape,
                                  transformation=i3.Translation(
-                                     (0, -(self.ground_width + self.electrode_gap + self.hot_taper_width))))
+                                     (0, -(self.ground_width + self.taper_gap + self.hot_width))))
 
             # CLADDING
             # Expand the waveguide cladding region under the electrode
             elems += i3.Rectangle(self.waveguide_cladding_layer,
-                                  center=(0.0, -(self.ground_width + self.electrode_gap + self.hot_taper_width) /2 ),
+                                  center=(0.0, 0.0),
                                   box_size=(self.electrode_length + self.taper_length * 2,
                                             self.hot_width * 2 + self.electrode_gap * 4 + self.ground_width * 3))
 
             # Electrode opening windows
-            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-            #                       center=(-self.electrode_length * 0.5 - self.taper_length + 25, 0),
-            #                       box_size = (55, self.hot_taper_width + 4)
-            #                       )
-            #
-            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-            #                       center=(-self.electrode_length * 0.5 - self.taper_length + 50,
-            #                               (self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
-            #                       box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
-            #                       )
-            #
-            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-            #                       center=(-self.electrode_length * 0.5 - self.taper_length + 50,
-            #                               -(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
-            #                       box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
-            #                       )
-            #
-            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-            #                       center=(self.electrode_length * 0.5 + self.taper_length - 25, 0),
-            #                       box_size = (55, self.hot_taper_width + 4)
-            #                       )
-            #
-            # # top right rectangle
-            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-            #                       center=(self.electrode_length * 0.5 + self.taper_length - 50,
-            #                               (self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
-            #                       box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
-            #                       )
-            #
-            # # middle right large rectangle
-            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-            #                       center=(self.electrode_length * 0.5 + self.taper_length - 50, 0),
-            #                       box_size=(105,
-            #                                 self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
-            #                       )
-            #
-            # # bottom right large rectangle
-            # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
-            #                       center=(self.electrode_length * 0.5 + self.taper_length - 50,
-            #                               -(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
-            #                       box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
-            #                       )
+            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+                                  center=(-self.electrode_length * 0.5 - self.taper_length + 25, 0),
+                                  box_size = (55, self.hot_taper_width + 4)
+                                  )
+
+            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+                                  center=(-self.electrode_length * 0.5 - self.taper_length + 50,
+                                          (self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
+                                  box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+                                  )
+
+            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+                                  center=(-self.electrode_length * 0.5 - self.taper_length + 50,
+                                          -(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
+                                  box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+                                  )
+
+            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+                                  center=(self.electrode_length * 0.5 + self.taper_length - 25, 0),
+                                  box_size = (55, self.hot_taper_width + 4)
+                                  )
+
+            # top right rectangle
+            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+                                  center=(self.electrode_length * 0.5 + self.taper_length - 50,
+                                          (self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
+                                  box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+                                  )
+
+            # middle right large rectangle
+            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+                                  center=(self.electrode_length * 0.5 + self.taper_length - 50, 0),
+                                  box_size=(105,
+                                            self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+                                  )
+
+            # bottom right large rectangle
+            elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
+                                  center=(self.electrode_length * 0.5 + self.taper_length - 50,
+                                          -(self.hot_taper_width / 2 + self.taper_gap + self.hot_width / 2 + self.electrode_gap + self.ground_width) /2 ),
+                                  box_size = (105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+                                  )
 
             return elems
 
