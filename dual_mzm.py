@@ -273,10 +273,14 @@ class CPWElectrodeWithWaveguides(i3.PCell):
                                                           bend_radius=self.bend_radius, angle_step=0.1)
 
             insts += i3.SRef(rf_electrode, position=(0, 0), name="electrode")
-            insts += i3.SRef(top_waveguide, position=(0, 0), name="top_wg")
-            insts += i3.SRef(bottom_waveguide, position=(0, 0), name="bottom_wg")
-            insts += i3.SRef(top_waveguide_2, position=(0, 0), name="top_wg_2")
-            insts += i3.SRef(bottom_waveguide_2, position=(0, 0), name="bottom_wg_2")
+            insts += i3.SRef(top_waveguide,
+                             position=(0, (self.hot_width + self.electrode_gap + self.ground_width)/2), name="top_wg")
+            insts += i3.SRef(bottom_waveguide,
+                             position=(0, (self.hot_width + self.electrode_gap + self.ground_width)/2), name="bottom_wg")
+            insts += i3.SRef(top_waveguide_2,
+                             position=(0, -(self.hot_width + self.electrode_gap + self.ground_width)/2), name="top_wg_2")
+            insts += i3.SRef(bottom_waveguide_2,
+                             position=(0, -(self.hot_width + self.electrode_gap + self.ground_width)/2), name="bottom_wg_2")
 
             return insts
 
@@ -286,10 +290,10 @@ class CPWElectrodeWithWaveguides(i3.PCell):
                                     'top_wg:out': 'top_out',
                                     'bottom_wg:in': 'bottom_in',
                                     'bottom_wg:out': 'bottom_out',
-                                    'top_wg_2:in': 'top_2_in',
-                                    'top_wg_2:out': 'top_2_out',
-                                    'bottom_wg_2:in': 'bottom_2_in',
-                                    'bottom_wg_2:out': 'bottom_2_out',
+                                    'top_wg_2:in': 'top_in_2',
+                                    'top_wg_2:out': 'top_out_2',
+                                    'bottom_wg_2:in': 'bottom_in_2',
+                                    'bottom_wg_2:out': 'bottom_out_2',
                                     'electrode:top_signal': 'signal',
                                     'electrode:top_ground': 'bottom_ground',
                                     'electrode:middle_ground': 'top_ground',
@@ -408,10 +412,14 @@ class _MZM(i3.PCell):
             # instances
             instances = {
                 'splitter': self.splitter,
+                'splitter_2': self.splitter,
                 'combiner': self.combiner,
+                'combiner_2': self.combiner,
                 'phase_modulator': self.phase_modulator,
                 'top_phase_shifter': self.top_phase_shifter,
                 'bottom_phase_shifter': self.bottom_phase_shifter,
+                'top_phase_shifter_2': self.top_phase_shifter,
+                'bottom_phase_shifter_2': self.bottom_phase_shifter,
             }
 
             if self.with_delays:
@@ -453,35 +461,65 @@ class _MZM(i3.PCell):
 
             if self.with_delays:
                 if self.delay_at_input:
+                    # x position of top combiner and splitter
                     combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
                                      self.combiner.ports['in1'].position[0]
 
                     splitter_pos_x = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[0] - self.bend_radius * 4 - \
                                      self.splitter.ports['out1'].position[0] - straight_stub_length - self.bend_to_phase_shifter_dist
+
+                    # x position of bottom combiner and splitter
+                    combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
+                                     self.combiner.ports['in1'].position[0]
+
+                    splitter_pos_x_2 = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[
+                        0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length
+
                 else:
+                    # x position of top combiner and splitter
                     combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_radius * 4 + straight_stub_length * 2 - \
                                      self.combiner.ports['in1'].position[0]
 
                     splitter_pos_x = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[0] - self.bend_length - \
                                      self.splitter.ports['out1'].position[0] - straight_stub_length - self.bend_to_phase_shifter_dist
 
+                    # x position of bottom combiner and splitter
+                    combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[
+                                         0] + self.bend_radius * 4 + straight_stub_length * 2 - \
+                                     self.combiner.ports['in1'].position[0]
+
+                    splitter_pos_x_2 = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[
+                        0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length
+
             else:
+                # x position of top combiner and splitter
                 combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
                                  self.combiner.ports['in1'].position[0]
 
                 splitter_pos_x = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[0] - self.bend_length - \
                                  self.splitter.ports['out1'].position[0] - straight_stub_length
 
+                # x position of bottom combiner and splitter
+                combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
+                                 self.combiner.ports['in1'].position[0]
+
+                splitter_pos_x_2 = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[
+                    0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length
 
 
 
             specs=[
                 i3.Place('phase_modulator', (0, 0)),
                 i3.Place('top_phase_shifter', (phase_shifter_pos_x, self.phase_modulator.ports['top_in'].position[1])),
-                i3.Place('bottom_phase_shifter', (phase_shifter_pos_x, self.phase_modulator.ports['bottom_in'].position[1]), ),
+                i3.Place('bottom_phase_shifter', (phase_shifter_pos_x, self.phase_modulator.ports['bottom_in'].position[1])),
                 i3.FlipV('bottom_phase_shifter'),
-                i3.Place('splitter', (splitter_pos_x, 0)),
-                i3.Place('combiner', (combiner_pos_x, 0)),
+                i3.Place('bottom_phase_shifter_2', (phase_shifter_pos_x, -self.phase_modulator.ports['top_in'].position[1])),
+                i3.Place('top_phase_shifter_2', (phase_shifter_pos_x, -self.phase_modulator.ports['bottom_in'].position[1])),
+                i3.FlipV('bottom_phase_shifter_2'),
+                i3.Place('splitter', (splitter_pos_x-800, (self.hot_width + self.electrode_gap + self.ground_width)/2)),
+                i3.Place('combiner', (combiner_pos_x, (self.hot_width + self.electrode_gap + self.ground_width)/2)),
+                i3.Place('splitter_2', (splitter_pos_x_2, -(self.hot_width + self.electrode_gap + self.ground_width)/2)),
+                i3.Place('combiner_2', (combiner_pos_x_2, -(self.hot_width + self.electrode_gap + self.ground_width)/2)),
 
                 #i3.Join("splitter:out1", "bottom_bend:in"),
                 #i3.Join("splitter:out2", "top_bend:in"),
@@ -495,6 +533,12 @@ class _MZM(i3.PCell):
                     ("top_phase_shifter:out", "phase_modulator:top_in"),
                 ],
                     bend_radius=self.bend_radius
+                ),
+                i3.ConnectBend([
+                    ("bottom_phase_shifter_2:out", "phase_modulator:bottom_in_2"),
+                    ("top_phase_shifter_2:out", "phase_modulator:top_in_2"),
+                ],
+                    bend_radius=self.bend_radius
                 )
             ]
 
@@ -505,6 +549,8 @@ class _MZM(i3.PCell):
 
                     specs.append(i3.ConnectBend([("splitter:out1", "bottom_bend:in"),
                                                  ("splitter:out2", "top_bend:in"),
+                                                 ("splitter_2:out1", "bottom_phase_shifter_2:in"),
+                                                 ("splitter_2:out2", "top_phase_shifter_2:in"),
                                                  ("bottom_bend:out", "bottom_phase_shifter:in"),
                                                  ("top_bend:out", "top_phase_shifter:in"),
                                                  ],
@@ -513,6 +559,8 @@ class _MZM(i3.PCell):
 
                     specs.append(i3.ConnectBend([("phase_modulator:bottom_out", "combiner:in1"),
                                                  ("phase_modulator:top_out", "combiner:in2"),
+                                                 ("phase_modulator:bottom_out_2", "combiner_2:in1"),
+                                                 ("phase_modulator:top_out_2", "combiner_2:in2"),
                                                  ],
                                                 start_straight=straight_stub_length,
                                                 end_straight=straight_stub_length,
@@ -524,6 +572,8 @@ class _MZM(i3.PCell):
 
                     specs.append(i3.ConnectBend([("splitter:out1", "bottom_phase_shifter:in"),
                                                  ("splitter:out2", "top_phase_shifter:in"),
+                                                 ("splitter_2:out1", "bottom_phase_shifter_2:in"),
+                                                 ("splitter_2:out2", "top_phase_shifter_2:in"),
                                                  ],
                                                 start_straight=straight_stub_length,
                                                 end_straight=straight_stub_length,
@@ -533,6 +583,8 @@ class _MZM(i3.PCell):
                                                  ("phase_modulator:top_out", "top_bend:in"),
                                                  ("bottom_bend:out", "combiner:in1"),
                                                  ("top_bend:out", "combiner:in2"),
+                                                 ("phase_modulator:bottom_out_2", "combiner_2:in1"),
+                                                 ("phase_modulator:top_out_2", "combiner_2:in2"),
                                                  ],
 
                                                 bend_radius=self.bend_radius))
@@ -543,8 +595,12 @@ class _MZM(i3.PCell):
             else:
                 specs.append(i3.ConnectBend([("splitter:out1", "bottom_phase_shifter:in"),
                                              ("splitter:out2", "top_phase_shifter:in"),
+                                             ("splitter_2:out1", "bottom_phase_shifter_2:in"),
+                                             ("splitter_2:out2", "top_phase_shifter_2:in"),
                                              ("phase_modulator:bottom_out", "combiner:in1"),
                                              ("phase_modulator:top_out", "combiner:in2"),
+                                             ("phase_modulator:bottom_out_2", "combiner_2:in1"),
+                                             ("phase_modulator:top_out_2", "combiner_2:in2"),
                                              ],
                                             start_straight=straight_stub_length,
                                             end_straight=straight_stub_length,
@@ -556,20 +612,20 @@ class _MZM(i3.PCell):
 
         def _generate_ports(self, ports):
 
-            for p in self.splitter.in_ports:
-                ports += i3.expose_ports(self.instances, {'splitter:{}'.format(p.name): p.name})
-
-            for p in self.combiner.out_ports:
-                ports += i3.expose_ports(self.instances, {'combiner:{}'.format(p.name): p.name})
-
-            ports += i3.expose_ports(self.instances, {'bottom_phase_shifter:m1': 'm1_1'})
-            ports += i3.expose_ports(self.instances, {'bottom_phase_shifter:m2': 'm1_2'})
-            ports += i3.expose_ports(self.instances, {'top_phase_shifter:m1': 'm2_1'})
-            ports += i3.expose_ports(self.instances, {'top_phase_shifter:m2': 'm2_2'})
-            ports += i3.expose_ports(self.instances, {'phase_modulator:signal': 'signal',
-                                                      'phase_modulator:bottom_ground': 'ground_1',
-                                                      'phase_modulator:top_ground': 'ground_2'
-                                                      })
+            # for p in self.splitter.in_ports:
+            #     ports += i3.expose_ports(self.instances, {'splitter:{}'.format(p.name): p.name})
+            #
+            # for p in self.combiner.out_ports:
+            #     ports += i3.expose_ports(self.instances, {'combiner:{}'.format(p.name): p.name})
+            #
+            # ports += i3.expose_ports(self.instances, {'bottom_phase_shifter:m1': 'm1_1'})
+            # ports += i3.expose_ports(self.instances, {'bottom_phase_shifter:m2': 'm1_2'})
+            # ports += i3.expose_ports(self.instances, {'top_phase_shifter:m1': 'm2_1'})
+            # ports += i3.expose_ports(self.instances, {'top_phase_shifter:m2': 'm2_2'})
+            # ports += i3.expose_ports(self.instances, {'phase_modulator:signal': 'signal',
+            #                                           'phase_modulator:bottom_ground': 'ground_1',
+            #                                           'phase_modulator:top_ground': 'ground_2'
+            #                                           })
             return ports
 
 

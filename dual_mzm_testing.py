@@ -5,5 +5,5 @@ from dual_mzm import DualMZM1x1
 
 
 if __name__ == '__main__':
-    dual_mzm = DualMZM1x1()
+    dual_mzm = DualMZM1x1(bend_to_phase_shifter_dist=500)
     dual_mzm.Layout().visualize(annotate=True)
