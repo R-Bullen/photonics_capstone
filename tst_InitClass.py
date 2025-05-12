@@ -12,7 +12,10 @@ class InitMain(Circuit):
         super().__init__(mmi=mmi, mzm1=mzm1, mzm2=mzm2, ps=ps, mmi2=mmi2, pad=pad)
 
     def DisplayLayout(self):
-        super().Layout().visualize(annotate=False)
+        super().Layout().visualize(annotate=True)
+
+    def Simulation(self):
+        return
 
 if (__name__ == "__main__"):
     mmi = pdk.MMI1X2_TE1550_RIB()

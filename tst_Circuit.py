@@ -1,5 +1,3 @@
-from ipkiss3.pcell.placement.expose_ports import expose_ports
-
 import asp_sin_lnoi_photonics.all as pdk
 import ipkiss3.all as i3
 import pylab as plt
@@ -56,6 +54,7 @@ class Circuit(i3.Circuit):
         exposed_ports =\
             {
                 "mmi1:in": "in",
+                "mmi2:out": "out"
             }
 
         return exposed_ports
