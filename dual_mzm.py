@@ -481,7 +481,7 @@ class _MZM(i3.PCell):
                                      self.combiner.ports['in1'].position[0]
 
                     splitter_pos_x_main = splitter_pos_x - self.top_phase_shifter.ports['in'].position[
-                        0] - self.bend_length*4 - self.splitter.ports['out1'].position[0] - straight_stub_length
+                        0] - self.bend_length*2.5 - self.splitter.ports['out1'].position[0] - straight_stub_length
                 else:
                     # x position of top combiner and splitter
                     combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_radius * 4 + straight_stub_length * 2 - \
@@ -503,7 +503,7 @@ class _MZM(i3.PCell):
                                      self.combiner.ports['in1'].position[0]
 
                     splitter_pos_x_main = splitter_pos_x - self.top_phase_shifter.ports['in'].position[
-                        0] - self.bend_length*4 - self.splitter.ports['out1'].position[0] - straight_stub_length
+                        0] - self.bend_length*2.5 - self.splitter.ports['out1'].position[0] - straight_stub_length
             else:
                 # x position of top combiner and splitter
                 combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
@@ -538,23 +538,30 @@ class _MZM(i3.PCell):
                 i3.Place('combiner', (combiner_pos_x, (self.hot_width + self.electrode_gap + self.ground_width)/2)),
                 i3.Place('splitter_2', (splitter_pos_x_2, -(self.hot_width + self.electrode_gap + self.ground_width)/2)),
                 i3.Place('combiner_2', (combiner_pos_x_2, -(self.hot_width + self.electrode_gap + self.ground_width)/2)),
-                i3.Place('splitter_main', (splitter_pos_x_main, -2*(self.hot_width + self.electrode_gap + self.ground_width))),
+                i3.Place('splitter_main', (splitter_pos_x_main, -2.25*(self.hot_width + self.electrode_gap + self.ground_width))),
                 i3.FlipV('splitter_main'),
                 i3.Place('combiner_main', (combiner_pos_x_main, 0)),
 
                 i3.ConnectManhattan([
                     ("splitter_main:out1", "splitter:in")
-                ]),
-                # i3.ConnectBend([
-                #     ("combiner:out", "combiner_main:in1"),
-                #     ("combiner_2:out", "combiner_main:in2"),
-                # ],
-                #     bend_radius=self.bend_radius
-                # ),
+                    ],
+                    bend_radius=self.bend_radius
+                ),
+                i3.ConnectManhattan([
+                    ("splitter_main:out2", "splitter_2:in")
+                    ],
+                    bend_radius=self.bend_radius
+                ),
+                i3.ConnectBend([
+                    ("combiner:out", "combiner_main:in1"),
+                    ("combiner_2:out", "combiner_main:in2"),
+                    ],
+                    bend_radius=self.bend_radius
+                ),
                 i3.ConnectBend([
                     ("bottom_phase_shifter:out", "phase_modulator:bottom_in"),
                     ("top_phase_shifter:out", "phase_modulator:top_in"),
-                ],
+                    ],
                     bend_radius=self.bend_radius
                 ),
                 i3.ConnectBend([
