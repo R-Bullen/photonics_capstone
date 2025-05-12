@@ -40,9 +40,14 @@ circuit = (i3.Circuit
             i3.ConnectElectrical("mzm2:m1_2", "pad2:m1",start_angle=0, end_angle=0),
             i3.ConnectElectrical("pad1:m1", "ps1:m1",start_angle=0, end_angle=0),
             i3.ConnectElectrical("pad3:m1", "ps1:m2",start_angle=0, end_angle=0),
-        ]
+        ],
+    exposed_ports =
+        {
+            "mmi1:in": "in",
+            "mmi2:out": "out"
+        }
     )
 )
 
 circuit_layout = circuit.Layout()
-circuit_layout.visualize(annotate=False)
+circuit_layout.visualize(annotate=True)

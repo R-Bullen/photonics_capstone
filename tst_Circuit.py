@@ -1,3 +1,5 @@
+from ipkiss3.pcell.placement.expose_ports import expose_ports
+
 import asp_sin_lnoi_photonics.all as pdk
 import ipkiss3.all as i3
 import pylab as plt
@@ -49,3 +51,11 @@ class Circuit(i3.Circuit):
             ]
 
         return specs
+
+    def _default_exposed_ports(self):
+        exposed_ports =\
+            {
+                "mmi1:in": "in",
+            }
+
+        return exposed_ports
