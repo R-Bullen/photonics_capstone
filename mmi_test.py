@@ -60,8 +60,14 @@ circuit_layout.visualize(annotate=True)
 # Circuit Model
 circuit_model = circuit.CircuitModel()
 wavelengths = np.linspace(1.5, 1.6, 501)
-#S = circuit_model.get_smatrix(wavelengths=wavelengths)
+#print(wavelengths)
+S = circuit_model.get_smatrix(wavelengths=wavelengths,debug=True)
 #S = circuit_model.calculate_smatrix(wavelengths=wavelengths)
+
+#transmission = S['in', 'out', :]
+#plt.plot(wavelengths, np.abs(transmission) ** 2)
+#plt.show()
+
 
 # Plot Simulation
 #plt.plot(wavelengths, i3.signal_power_dB(S["out", "in"]), linewidth=2, label="out")
