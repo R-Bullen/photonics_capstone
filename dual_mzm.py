@@ -538,14 +538,13 @@ class _MZM(i3.PCell):
                 i3.Place('combiner', (combiner_pos_x, (self.hot_width + self.electrode_gap + self.ground_width)/2)),
                 i3.Place('splitter_2', (splitter_pos_x_2, -(self.hot_width + self.electrode_gap + self.ground_width)/2)),
                 i3.Place('combiner_2', (combiner_pos_x_2, -(self.hot_width + self.electrode_gap + self.ground_width)/2)),
-                i3.Place('splitter_main', (splitter_pos_x_main, -2.25*(self.hot_width + self.electrode_gap + self.ground_width))),
+                i3.Place('splitter_main', (splitter_pos_x_main, (self.hot_width + self.electrode_gap + self.ground_width)/2)),
                 i3.FlipV('splitter_main'),
                 i3.Place('combiner_main', (combiner_pos_x_main, 0)),
 
-                i3.ConnectManhattan([
+                i3.ConnectBend([
                     ("splitter_main:out1", "splitter:in")
                     ],
-                    bend_radius=self.bend_radius
                 ),
                 i3.ConnectManhattan([
                     ("splitter_main:out2", "splitter_2:in")
