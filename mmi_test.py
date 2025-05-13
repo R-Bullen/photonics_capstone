@@ -64,6 +64,10 @@ wavelengths = np.linspace(1.5, 1.6, 501)
 S = circuit_model.get_smatrix(wavelengths=wavelengths,debug=True)
 #S = circuit_model.calculate_smatrix(wavelengths=wavelengths)
 
+#transmission = S['mmi_in', 'mmi_out1', :]
+#plt.plot(wavelengths, np.abs(transmission) ** 2)
+#plt.show()
+
 #transmission = S['in', 'out', :]
 #plt.plot(wavelengths, np.abs(transmission) ** 2)
 #plt.show()
