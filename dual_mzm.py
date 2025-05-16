@@ -27,6 +27,9 @@ class CPWElectrode(i3.PCell):
         taper_length = i3.PositiveNumberProperty(default=100.0, doc="the length of the taper")
         hot_width = i3.PositiveNumberProperty(default=23.0, doc="width of the hot electrode")
         ground_width = i3.PositiveNumberProperty(default=100.0, doc="width of the ground planes")
+
+        centre_width = i3.PositiveNumberProperty(default=100.0, doc="width of the centre ground electrode")
+
         electrode_gap = i3.PositiveNumberProperty(default=7.0, doc="gap between hot electrode and ground plane")
         hot_taper_width = i3.PositiveNumberProperty(default=50.0, doc="width of the hot electrode at the end of the taper")
         taper_gap = i3.PositiveNumberProperty(default=20.0,
@@ -77,11 +80,11 @@ class CPWElectrode(i3.PCell):
             #he_taper_shape = he_taper_shape1 + he_taper_shape2 + he_taper_shape2.h_mirror_copy().reverse() + he_taper_shape1.h_mirror_copy().reverse()
             he_taper_shape.close()
             elems += i3.Boundary(layer=self.layer, shape=he_taper_shape,
-                                 transformation=i3.Translation((0, (self.hot_width + self.electrode_gap + self.ground_width)/2)))
+                                 transformation=i3.Translation((0, (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)))
 
             # boundary for bottom signal electrode
             elems += i3.Boundary(layer=self.layer, shape=he_taper_shape,
-                                 transformation=i3.Translation((0,-(self.hot_width + self.electrode_gap + self.ground_width)/2)))
+                                 transformation=i3.Translation((0,-(self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)))
 
             # Top ground plane
             grnd_taper_shape1 = i3.ShapeRound(original_shape=[(-self.electrode_length * 0.5, self.hot_width * 0.5 + self.electrode_gap),
@@ -107,34 +110,34 @@ class CPWElectrode(i3.PCell):
 
             # top ground plane
             elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape,
-                                 transformation=i3.Translation((0, (self.hot_width + self.electrode_gap + self.ground_width)/2)))
+                                 transformation=i3.Translation((0, (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)))
 
             # bottom ground plane
             elems += i3.Boundary(layer=self.layer, shape=top_grnd_taper_shape.v_mirror_copy(),
-                                 transformation=i3.Translation((0,-(self.hot_width + self.electrode_gap + self.ground_width)/2)))
+                                 transformation=i3.Translation((0,-(self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)))
 
             # the shape of the end of the middle gnd electrode
             grnd_taper_shape3 = ( grnd_taper_shape1 +
                             grnd_taper_shape1.translate_copy(
-                                (0,-(self.ground_width + self.electrode_gap + self.hot_width))).v_mirror_copy().reverse()
+                                (0,-(self.ground_width + self.electrode_gap * 2 + self.hot_width))).v_mirror_copy().reverse()
                             )
 
             # shape combining the two ends of the middle gnd electrode into one shape
             middle_grnd_taper_shape = (grnd_taper_shape3 +
-                                       grnd_taper_shape3.translate_copy((0, -(self.ground_width + self.electrode_gap + self.hot_width))).h_mirror_copy().v_mirror_copy())
+                                       grnd_taper_shape3.translate_copy((0, -(self.ground_width + self.electrode_gap * 2 + self.hot_width))).h_mirror_copy().v_mirror_copy())
             middle_grnd_taper_shape.close()
 
             # middle ground plane
             elems += i3.Boundary(layer=self.layer, shape=middle_grnd_taper_shape,
                                  transformation=i3.Translation(
-                                     (0, -(self.ground_width + self.electrode_gap + self.hot_width)/2)))
+                                     (0, -(self.ground_width + self.electrode_gap * 2 + self.hot_width)/2)))
 
             # CLADDING
             # Expand the waveguide cladding region under the electrode
             elems += i3.Rectangle(self.waveguide_cladding_layer,
                                   center=(0.0, 0.0),
                                   box_size=(self.electrode_length + self.taper_length * 2,
-                                            self.hot_width * 2 + self.electrode_gap * 3 + self.ground_width * 3))
+                                            self.hot_width * 2 + self.electrode_gap * 4 + self.ground_width * 3))
 
             # # Electrode opening windows
             # elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
@@ -235,6 +238,9 @@ class CPWElectrodeWithWaveguides(i3.PCell):
         electrode_length = i3.PositiveNumberProperty(default=7000.0, doc="the length of the electrode")
         hot_width = i3.PositiveNumberProperty(default=23.0, doc="width of the hot electrode")
         ground_width = i3.PositiveNumberProperty(default=50.0, doc="width of the ground planes")
+
+        centre_width = i3.PositiveNumberProperty(default=50.0, doc="width of the centre ground electrode")
+
         electrode_gap = i3.PositiveNumberProperty(default=6.0, doc="gap between hot electrode and ground plane")
         taper_length = i3.PositiveNumberProperty(default=200.0, doc="the length of the taper")
         hot_taper_width = i3.PositiveNumberProperty(default=50.0,
@@ -274,13 +280,13 @@ class CPWElectrodeWithWaveguides(i3.PCell):
 
             insts += i3.SRef(rf_electrode, position=(0, 0), name="electrode")
             insts += i3.SRef(top_waveguide,
-                             position=(0, (self.hot_width + self.electrode_gap + self.ground_width)/2), name="top_wg")
+                             position=(0, (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2), name="top_wg")
             insts += i3.SRef(bottom_waveguide,
-                             position=(0, (self.hot_width + self.electrode_gap + self.ground_width)/2), name="bottom_wg")
+                             position=(0, (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2), name="bottom_wg")
             insts += i3.SRef(top_waveguide_2,
-                             position=(0, -(self.hot_width + self.electrode_gap + self.ground_width)/2), name="top_wg_2")
+                             position=(0, -(self.hot_width + self.electrode_gap * 2 + self.ground_width)/2), name="top_wg_2")
             insts += i3.SRef(bottom_waveguide_2,
-                             position=(0, -(self.hot_width + self.electrode_gap + self.ground_width)/2), name="bottom_wg_2")
+                             position=(0, -(self.hot_width + self.electrode_gap * 2 + self.ground_width)/2), name="bottom_wg_2")
 
             return insts
 
@@ -377,6 +383,9 @@ class _MZM(i3.PCell):
         electrode_length = i3.PositiveNumberProperty(default=7000.0, doc="the length of the electrode")
         hot_width = i3.PositiveNumberProperty(default=23.0, doc="width of the hot electrode")
         ground_width = i3.PositiveNumberProperty(default=150.0, doc="width of the ground planes")
+
+        centre_width = i3.PositiveNumberProperty(default=150.0, doc="width of the centre ground electrode")
+
         electrode_gap = i3.PositiveNumberProperty(default=6.0, doc="gap between hot electrode and ground plane")
         taper_length = i3.PositiveNumberProperty(default=200.0, doc="the length of the taper")
         hot_taper_width = i3.PositiveNumberProperty(default=50.0,
@@ -432,9 +441,9 @@ class _MZM(i3.PCell):
                 delta_l = 1.55 ** 2 / (self.fsr_nm * 1e-3 * n_g)
 
                 if self.delay_at_input:
-                    delta_y =  -self.splitter.ports['out2'].position[1] + self.phase_modulator.ports['top_in'].position[1] - (self.hot_width + self.electrode_gap + self.ground_width)/2
+                    delta_y =  -self.splitter.ports['out2'].position[1] + self.phase_modulator.ports['top_in'].position[1] - (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2
                 else:
-                    delta_y =  self.combiner.ports['in2'].position[1] - self.phase_modulator.ports['top_out'].position[1] - (self.hot_width + self.electrode_gap + self.ground_width)/2
+                    delta_y =  self.combiner.ports['in2'].position[1] - self.phase_modulator.ports['top_out'].position[1] - (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2
 
                 top_bend = bend_connector(delta_y= delta_y,
                                           trace_template=self.trace_template,
@@ -444,9 +453,9 @@ class _MZM(i3.PCell):
                                           name=self.name + "top_bend")
 
                 if self.delay_at_input:
-                    delta_y = -self.splitter.ports['out1'].position[1] + self.phase_modulator.ports['bottom_in'].position[1] - (self.hot_width + self.electrode_gap + self.ground_width)/2
+                    delta_y = -self.splitter.ports['out1'].position[1] + self.phase_modulator.ports['bottom_in'].position[1] - (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2
                 else:
-                    delta_y = self.combiner.ports['in1'].position[1] - self.phase_modulator.ports['bottom_out'].position[1] - (self.hot_width + self.electrode_gap + self.ground_width)/2
+                    delta_y = self.combiner.ports['in1'].position[1] - self.phase_modulator.ports['bottom_out'].position[1] - (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2
 
                 bottom_bend = bend_connector(delta_y = delta_y,
                                              trace_template=self.trace_template,
@@ -480,8 +489,7 @@ class _MZM(i3.PCell):
                     combiner_pos_x_main = combiner_pos_x + self.bend_length*2 + straight_stub_length - \
                                      self.combiner.ports['in1'].position[0]
 
-                    splitter_pos_x_main = splitter_pos_x - self.top_phase_shifter.ports['in'].position[
-                        0] - self.bend_length*2.5 - self.splitter.ports['out1'].position[0] - straight_stub_length
+                    splitter_pos_x_main = - self.top_phase_shifter.ports['in'].position[0]  - self.splitter.ports['out1'].position[0] - straight_stub_length
                 else:
                     # x position of top combiner and splitter
                     combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_radius * 4 + straight_stub_length * 2 - \
@@ -502,8 +510,7 @@ class _MZM(i3.PCell):
                     combiner_pos_x_main = combiner_pos_x + self.bend_length*2 + straight_stub_length*2 - \
                                      self.combiner.ports['in1'].position[0]
 
-                    splitter_pos_x_main = splitter_pos_x - self.top_phase_shifter.ports['in'].position[
-                        0] - self.bend_length*2.5 - self.splitter.ports['out1'].position[0] - straight_stub_length
+                    splitter_pos_x_main = - self.top_phase_shifter.ports['in'].position[0] - self.splitter.ports['out1'].position[0] - straight_stub_length
             else:
                 # x position of top combiner and splitter
                 combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
@@ -534,23 +541,13 @@ class _MZM(i3.PCell):
                 i3.Place('bottom_phase_shifter_2', (phase_shifter_pos_x, -self.phase_modulator.ports['top_in'].position[1])),
                 i3.Place('top_phase_shifter_2', (phase_shifter_pos_x, -self.phase_modulator.ports['bottom_in'].position[1])),
                 i3.FlipV('bottom_phase_shifter_2'),
-                i3.Place('splitter', (splitter_pos_x, (self.hot_width + self.electrode_gap + self.ground_width)/2)),
-                i3.Place('combiner', (combiner_pos_x, (self.hot_width + self.electrode_gap + self.ground_width)/2)),
-                i3.Place('splitter_2', (splitter_pos_x_2, -(self.hot_width + self.electrode_gap + self.ground_width)/2)),
-                i3.Place('combiner_2', (combiner_pos_x_2, -(self.hot_width + self.electrode_gap + self.ground_width)/2)),
-                i3.Place('splitter_main', (splitter_pos_x_main, (self.hot_width + self.electrode_gap + self.ground_width)/2)),
+                i3.Place('splitter', (splitter_pos_x, (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)),
+                i3.Place('combiner', (combiner_pos_x, (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)),
+                i3.Place('splitter_2', (splitter_pos_x_2, -(self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)),
+                i3.Place('combiner_2', (combiner_pos_x_2, -(self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)),
                 i3.FlipV('splitter_main'),
                 i3.Place('combiner_main', (combiner_pos_x_main, 0)),
 
-                i3.ConnectBend([
-                    ("splitter_main:out1", "splitter:in")
-                    ],
-                ),
-                i3.ConnectManhattan([
-                    ("splitter_main:out2", "splitter_2:in")
-                    ],
-                    bend_radius=self.bend_radius
-                ),
                 i3.ConnectBend([
                     ("combiner:out", "combiner_main:in1"),
                     ("combiner_2:out", "combiner_main:in2"),
@@ -572,9 +569,28 @@ class _MZM(i3.PCell):
             ]
 
             if self.with_delays:
+                specs.append(i3.Place('splitter_main:out1', (splitter_pos_x_main, 0), relative_to='splitter:in'))
+                specs.append(i3.ConnectManhattan([
+                        ("splitter_main:out1", "splitter:in"),
+                        ("splitter_main:out2", "splitter_2:in")
+                        ],
+                        bend_radius=self.bend_radius
+                    )
+                )
+            else:
+                specs.append(i3.Place('splitter_main', (splitter_pos_x_main, 0)))
+                specs.append(i3.ConnectBend([
+                        ("splitter_main:out1", "splitter:in"),
+                        ("splitter_main:out2", "splitter_2:in")
+                        ],
+                        bend_radius=self.bend_radius
+                    )
+                )
+
+            if self.with_delays:
                 if self.delay_at_input:
-                    bottom_bend_pos = (splitter_pos_x + self.splitter.ports['out1'].position[0] + straight_stub_length, self.splitter.ports['out1'].position[1] + (self.hot_width + self.electrode_gap + self.ground_width)/2)
-                    top_bend_pos = (splitter_pos_x + self.splitter.ports['out2'].position[0] + straight_stub_length, self.splitter.ports['out2'].position[1] + (self.hot_width + self.electrode_gap + self.ground_width)/2)
+                    bottom_bend_pos = (splitter_pos_x + self.splitter.ports['out1'].position[0] + straight_stub_length, self.splitter.ports['out1'].position[1] + (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)
+                    top_bend_pos = (splitter_pos_x + self.splitter.ports['out2'].position[0] + straight_stub_length, self.splitter.ports['out2'].position[1] + (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)
 
                     specs.append(i3.ConnectBend([("splitter:out1", "bottom_bend:in"),
                                                  ("splitter:out2", "top_bend:in"),
@@ -596,8 +612,8 @@ class _MZM(i3.PCell):
                                                 bend_radius=self.bend_radius))
 
                 else:
-                    bottom_bend_pos = (self.phase_modulator.ports['bottom_out'].position[0] + straight_stub_length, self.phase_modulator.ports['bottom_out'].position[1] + (self.hot_width + self.electrode_gap + self.ground_width)/2)
-                    top_bend_pos = (self.phase_modulator.ports['top_out'].position[0] + straight_stub_length, self.phase_modulator.ports['top_out'].position[1] + (self.hot_width + self.electrode_gap + self.ground_width)/2)
+                    bottom_bend_pos = (self.phase_modulator.ports['bottom_out'].position[0] + straight_stub_length, self.phase_modulator.ports['bottom_out'].position[1] + (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)
+                    top_bend_pos = (self.phase_modulator.ports['top_out'].position[0] + straight_stub_length, self.phase_modulator.ports['top_out'].position[1] + (self.hot_width + self.electrode_gap * 2 + self.ground_width)/2)
 
                     specs.append(i3.ConnectBend([("splitter:out1", "bottom_phase_shifter:in"),
                                                  ("splitter:out2", "top_phase_shifter:in"),
