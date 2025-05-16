@@ -433,6 +433,8 @@ class _MZM(i3.PCell):
                 'bottom_phase_shifter': self.bottom_phase_shifter,
                 'top_phase_shifter_2': self.top_phase_shifter,
                 'bottom_phase_shifter_2': self.bottom_phase_shifter,
+                'top_output_phase_shifter': self.top_phase_shifter,
+                'bottom_output_phase_shifter': self.bottom_phase_shifter,
             }
 
             if self.with_delays:
@@ -488,7 +490,7 @@ class _MZM(i3.PCell):
                         0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length
 
                     # x position of main combiner and splitter
-                    combiner_pos_x_main = combiner_pos_x + self.bend_length*2 + straight_stub_length - \
+                    combiner_pos_x_main = combiner_pos_x + self.bend_length*4 + straight_stub_length - \
                                      self.combiner.ports['in1'].position[0]
 
                     splitter_pos_x_main = - self.top_phase_shifter.ports['in'].position[0]  - self.splitter.ports['out1'].position[0] - straight_stub_length
@@ -509,7 +511,7 @@ class _MZM(i3.PCell):
                         0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length
 
                     # x position of main combiner and splitter
-                    combiner_pos_x_main = combiner_pos_x + self.bend_length*2 + straight_stub_length*2 - \
+                    combiner_pos_x_main = combiner_pos_x + self.bend_length*4 + straight_stub_length*2 - \
                                      self.combiner.ports['in1'].position[0]
 
                     splitter_pos_x_main = - self.top_phase_shifter.ports['in'].position[0] - self.splitter.ports['out1'].position[0] - straight_stub_length
@@ -529,7 +531,7 @@ class _MZM(i3.PCell):
                     0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length
 
                 # x position of main combiner and splitter
-                combiner_pos_x_main = combiner_pos_x + self.bend_length*2 + straight_stub_length - \
+                combiner_pos_x_main = combiner_pos_x + self.bend_length*4 + straight_stub_length - \
                                      self.combiner.ports['in1'].position[0]
 
                 splitter_pos_x_main = splitter_pos_x - self.top_phase_shifter.ports['in'].position[
@@ -549,10 +551,16 @@ class _MZM(i3.PCell):
                 i3.Place('combiner_2', (combiner_pos_x_2, -(self.hot_width + self.electrode_gap * 2 + self.centre_width)/2)),
                 i3.FlipV('splitter_main'),
                 i3.Place('combiner_main', (combiner_pos_x_main, 0)),
+                i3.FlipV('combiner_main'),
+                i3.FlipV("bottom_output_phase_shifter"),
 
+                i3.Join([
+                    ("combiner:out", "top_output_phase_shifter:in"),
+                    ("combiner_2:out", "bottom_output_phase_shifter:in"),
+                ]),
                 i3.ConnectBend([
-                    ("combiner:out", "combiner_main:in1"),
-                    ("combiner_2:out", "combiner_main:in2"),
+                    ("top_output_phase_shifter:out", "combiner_main:in1"),
+                    ("bottom_output_phase_shifter:out", "combiner_main:in2"),
                     ],
                     bend_radius=self.bend_radius
                 ),
