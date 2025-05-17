@@ -375,11 +375,9 @@ class CPWElectrodeWithWaveguides(i3.PCell):
             )
 
 
-class _MZM(i3.PCell):
-    """Mach-Zehnder modulator with CPW travelling wave electrode.
-
-    Delays with different length can be placed on both arms of the modulator to set the biasing point by changing the wavelength.
-    These delays can be placed at the intput or output sides by setting parameter delay_at_input
+class IQModulator(i3.PCell):
+    """
+    Modified MZM into an IQ modulator
     """
 
     _name_prefix = "MZM"
@@ -516,66 +514,47 @@ class _MZM(i3.PCell):
             if self.with_delays:
                 if self.delay_at_input:
                     # x position of top combiner and splitter
-                    combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
-                                     self.combiner.ports['in1'].position[0]
-
                     splitter_pos_x = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[0] - self.bend_radius * 4 - \
-                                     self.splitter.ports['out1'].position[0] - straight_stub_length - self.bend_to_phase_shifter_dist
+                                     self.splitter.ports['out1'].position[0] - straight_stub_length - self.bend_to_phase_shifter_dist - (self.hot_taper_width-50)
 
                     # x position of bottom combiner and splitter
-                    combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
-                                     self.combiner.ports['in1'].position[0]
-
                     splitter_pos_x_2 = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[
-                        0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length
+                        0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length - (self.hot_taper_width-50)
 
-                    # x position of main combiner and splitter
-                    combiner_pos_x_main = combiner_pos_x + self.bend_length*4 + straight_stub_length - \
-                                     self.combiner.ports['in1'].position[0]
-
+                    # x position of main splitter
                     splitter_pos_x_main = - self.top_phase_shifter.ports['in'].position[0]  - self.splitter.ports['out1'].position[0] - straight_stub_length
                 else:
-                    # x position of top combiner and splitter
-                    combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_radius * 4 + straight_stub_length * 2 - \
-                                     self.combiner.ports['in1'].position[0]
-
+                    # x position of top splitter
                     splitter_pos_x = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[0] - self.bend_length - \
-                                     self.splitter.ports['out1'].position[0] - straight_stub_length - self.bend_to_phase_shifter_dist
+                                     self.splitter.ports['out1'].position[0] - straight_stub_length - self.bend_to_phase_shifter_dist - (self.hot_taper_width-50)
 
-                    # x position of bottom combiner and splitter
-                    combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[
-                                         0] + self.bend_radius * 4 + straight_stub_length * 2 - \
-                                     self.combiner.ports['in1'].position[0]
-
+                    # x position of bottom splitter
                     splitter_pos_x_2 = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[
-                        0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length
+                        0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length - (self.hot_taper_width-50)
 
-                    # x position of main combiner and splitter
-                    combiner_pos_x_main = combiner_pos_x + self.bend_length*4 + straight_stub_length*2 - \
-                                     self.combiner.ports['in1'].position[0]
-
+                    # x position of main splitter
                     splitter_pos_x_main = - self.top_phase_shifter.ports['in'].position[0] - self.splitter.ports['out1'].position[0] - straight_stub_length
             else:
-                # x position of top combiner and splitter
-                combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
-                                 self.combiner.ports['in1'].position[0]
-
+                # x position of top splitter
                 splitter_pos_x = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[0] - self.bend_length - \
-                                 self.splitter.ports['out1'].position[0] - straight_stub_length
+                                 self.splitter.ports['out1'].position[0] - straight_stub_length - (self.hot_taper_width-50)
 
-                # x position of bottom combiner and splitter
-                combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
-                                 self.combiner.ports['in1'].position[0]
-
+                # x position of bottom splitter
                 splitter_pos_x_2 = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[
-                    0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length
+                    0] - self.bend_length - self.splitter.ports['out1'].position[0] - straight_stub_length - (self.hot_taper_width-50)
 
-                # x position of main combiner and splitter
-                combiner_pos_x_main = combiner_pos_x + self.bend_length*4 + straight_stub_length - \
-                                     self.combiner.ports['in1'].position[0]
+                # x position of main splitter
+                splitter_pos_x_main = splitter_pos_x - self.splitter.ports['out1'].position[0] - self.centre_width - self.bend_length - self.hot_taper_width
 
-                splitter_pos_x_main = splitter_pos_x - self.top_phase_shifter.ports['in'].position[
-                    0] - self.bend_length*1.5 - self.splitter.ports['out1'].position[0] - straight_stub_length
+            # x position of top and bottom combiners
+            combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
+                             self.combiner.ports['in1'].position[0] + (self.hot_taper_width-50)
+
+            combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
+                               self.combiner.ports['in1'].position[0] + (self.hot_taper_width-50)
+
+            # x position of main combiner
+            combiner_pos_x_main = combiner_pos_x + self.bottom_phase_shifter.ports['out'].position[0] + self.centre_width + straight_stub_length + self.hot_taper_width + self.bend_length
 
             specs=[
                 i3.Place('phase_modulator', (0, 0)),
@@ -622,8 +601,14 @@ class _MZM(i3.PCell):
                 specs.append(i3.Place('splitter_main:out1', (splitter_pos_x_main, 0), relative_to='splitter:in'))
                 specs.append(i3.ConnectManhattan([
                         ("splitter_main:out1", "splitter:in"),
+                        ],
+                        bend_radius=self.bend_radius
+                    )
+                )
+                specs.append(i3.ConnectManhattan([
                         ("splitter_main:out2", "splitter_2:in")
                         ],
+                        control_points=[i3.H(-2*self.bend_radius-10, relative_to="splitter_2:in")],
                         bend_radius=self.bend_radius
                     )
                 )
@@ -746,9 +731,4 @@ class _MZM(i3.PCell):
         def _generate_model(self):
 
             return i3.HierarchicalModel.from_netlistview(self.netlist_view)
-
-class DualMZM1x1(_MZM):
-    # contains a top and bottom modulator with overlapping signal electrode
-
-    pass
 
