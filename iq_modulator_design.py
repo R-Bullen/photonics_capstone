@@ -10,7 +10,7 @@ from asp_sin_lnoi_photonics.compactmodels.all import PushPullModulatorModel
 
 from asp_sin_lnoi_photonics.components.modulator.mzm.pcell.connector import bend_connector
 
-__all__ = ["MZModulator1x1", "MZModulator1x2", "MZModulator2x2"]
+__all__ = ["IQModulator"]
 
 
 class CPWElectrode(i3.PCell):
@@ -341,10 +341,10 @@ class CPWElectrodeWithWaveguides(i3.PCell):
                                     'top_wg_2:out': 'top_out_2',
                                     'bottom_wg_2:in': 'bottom_in_2',
                                     'bottom_wg_2:out': 'bottom_out_2',
-                                    'electrode:top_signal': 'signal',
-                                    'electrode:top_ground': 'bottom_ground',
-                                    'electrode:middle_ground': 'top_ground',
-                                    'electrode:bottom_signal': 'signal',
+                                    'electrode:top_ground': 'top_ground',
+                                    'electrode:top_signal': 'top_signal',
+                                    'electrode:middle_ground': 'middle_ground',
+                                    'electrode:bottom_signal': 'bottom_signal',
                                     'electrode:bottom_ground': 'bottom_ground',
                                     })
 
@@ -694,7 +694,7 @@ class IQModulator(i3.PCell):
 
             # for p in self.splitter.in_ports:
             #     ports += i3.expose_ports(self.instances, {'splitter:{}'.format(p.name): p.name})
-            #
+
             # for p in self.combiner.out_ports:
             #     ports += i3.expose_ports(self.instances, {'combiner:{}'.format(p.name): p.name})
             #
@@ -702,10 +702,12 @@ class IQModulator(i3.PCell):
             # ports += i3.expose_ports(self.instances, {'bottom_phase_shifter:m2': 'm1_2'})
             # ports += i3.expose_ports(self.instances, {'top_phase_shifter:m1': 'm2_1'})
             # ports += i3.expose_ports(self.instances, {'top_phase_shifter:m2': 'm2_2'})
-            # ports += i3.expose_ports(self.instances, {'phase_modulator:signal': 'signal',
-            #                                           'phase_modulator:bottom_ground': 'ground_1',
-            #                                           'phase_modulator:top_ground': 'ground_2'
-            #                                           })
+            ports += i3.expose_ports(self.instances, {'phase_modulator:top_ground': 'top_ground',
+                                                        'phase_modulator:top_signal': 'top_signal',
+                                                        'phase_modulator:middle_ground': 'middle_ground',
+                                                        'phase_modulator:bottom_signal': 'bottom_signal',
+                                                        'phase_modulator:bottom_ground': 'bottom_ground',
+                                                      })
             return ports
 
 
