@@ -158,7 +158,7 @@ class CPWElectrode(i3.PCell):
             # left middle ground
             elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
                                   center=(-self.electrode_length * 0.5 - self.taper_length + 50, 0),
-                                  box_size=(105, self.hot_width / 2 + self.electrode_gap + self.ground_width - self.hot_taper_width / 2 - self.taper_gap + 4)
+                                  box_size=(105, self.centre_width - 2*(self.taper_gap + (self.hot_taper_width/2 - self.hot_width/2 - self.electrode_gap)) + 4)
                                   )
 
             # left bottom signal
@@ -192,7 +192,7 @@ class CPWElectrode(i3.PCell):
             # right middle ground
             elems += i3.Rectangle(i3.TECH.PPLAYER.VIA,
                                   center=(self.electrode_length * 0.5 + self.taper_length - 50, 0),
-                                  box_size=(105, self.centre_width - (self.hot_taper_width + self.taper_gap + self.hot_width + self.electrode_gap) /2)
+                                  box_size=(105, self.centre_width - 2*(self.taper_gap + (self.hot_taper_width/2 - self.hot_width/2 - self.electrode_gap)) + 4)
                                   )
 
             # right bottom signal
