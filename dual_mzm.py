@@ -223,10 +223,14 @@ class CPWElectrode(i3.PCell):
             return elems
 
         def _generate_ports(self, ports):
+            # width and location of the top and bottom ground electrode windows
+            ground_electrode_width = self.ground_width + self.hot_width / 2 + self.electrode_gap - self.hot_taper_width / 2 - self.taper_gap + 4
+            ground_electrode_centre_y = (self.centre_width + self.electrode_gap * 2 + self.hot_width + self.hot_taper_width + self.taper_gap * 2 + ground_electrode_width - 4) / 2
+
             ports += i3.ElectricalPort(
                 name="top_ground",
                 position=(-self.electrode_length * 0.5 - self.taper_length + self.taper_straight_length,
-                          (self.hot_taper_width + self.taper_gap + self.hot_width + self.electrode_gap * 2 + self.ground_width + self.centre_width) / 2),
+                          ground_electrode_centre_y),
                 layer=self.layer
             )
             ports += i3.ElectricalPort(
@@ -249,7 +253,7 @@ class CPWElectrode(i3.PCell):
             ports += i3.ElectricalPort(
                 name="bottom_ground",
                 position=(-self.electrode_length * 0.5 - self.taper_length + self.taper_straight_length,
-                          -(self.hot_taper_width + self.taper_gap + self.hot_width + self.electrode_gap * 2 + self.ground_width + self.centre_width) / 2),
+                          -ground_electrode_centre_y),
                 layer=self.layer
             )
 
