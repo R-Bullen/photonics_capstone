@@ -6,11 +6,125 @@ from ipkiss3.pcell.netlist.instance import InstanceTerm
 from asp_sin_lnoi_photonics.components.waveguides.rib import SiNRibWaveguideTemplate, RWG1000, RoundedRibWaveguide
 from asp_sin_lnoi_photonics.components.mmi.pcell import MMI1X2_TE1550_RIB, MMI2X1_TE1550_RIB, MMI2X2_TE1550_RIB
 from asp_sin_lnoi_photonics.components.phase_shifter.pcell import PhaseShifter
-from asp_sin_lnoi_photonics.compactmodels.all import PushPullModulatorModel
+
+# imports for the CompactModel class
+from ipkiss3.pcell.model import CompactModel
+from ipkiss3.pcell.photonics.term import OpticalTerm
+from ipkiss3.pcell.wiring import ElectricalTerm
+import numpy as np
+from scipy.constants import speed_of_light
 
 from asp_sin_lnoi_photonics.components.modulator.mzm.pcell.connector import bend_connector
 
 __all__ = ["IQModulator"]
+
+class PushPullModulatorModel(CompactModel):
+    """
+    Model for a push-pull modulator with two optical waveguides in the electrode gaps.
+
+    Parameters
+    ----------
+    n_g :
+        Group index at the given centre wavelength
+    n_eff :
+        Effective index at the given centre wavelength
+    center_wavelength :
+        The centre wavelength at which n_g and n_eff are defined
+    loss_dB_m :
+        Optical loss per m.
+    top_wg_length:
+        Length of the top optical waveguide
+    bottom_wg_length:
+        Length of the bottom optical waveguide
+    electrode_length:
+        Length of the electrode
+    vpi_l:
+        Vpi*L product in V*cm for a single waveguide (single drive phase modulator)
+    voltage:
+        The DC voltage applied to the electrode (only used for s-matrix calculation)
+    bandwidth:
+        The bandwidth of the phase modulator in Hz
+    """
+
+    parameters = [
+        'n_g',
+        'n_eff',
+        'center_wavelength',
+        'loss_dB_m',
+        'top_wg_length',
+        'bottom_wg_length',
+        'electrode_length',
+        'vpi_l',
+        'voltage',
+        'bandwidth'
+    ]
+
+    terms = [
+        OpticalTerm(name='top_in'),
+        OpticalTerm(name='top_out'),
+        OpticalTerm(name='bottom_in'),
+        OpticalTerm(name='bottom_out'),
+        ElectricalTerm(name='signal'),
+        ElectricalTerm(name='bottom_ground'),
+        ElectricalTerm(name='top_ground')
+    ]
+
+    states = [
+        'voltage_bottom',
+        'voltage_top',
+    ]
+
+    def calculate_smatrix(parameters, env, S):
+        # First order approximation of neff based on group index and effective index at the given center wavelength
+        dneff = -(parameters.n_g - parameters.n_eff) / parameters.center_wavelength
+        neff_total = parameters.n_eff + (env.wavelength - parameters.center_wavelength) * dneff
+
+        switching_voltage = parameters.vpi_l / parameters.electrode_length * 1e4
+        dn_dv = parameters.center_wavelength / (2.0 * parameters.electrode_length * switching_voltage)
+        phase = 2.0 * np.pi / env.wavelength * (
+                    neff_total * parameters.top_wg_length + dn_dv * parameters.voltage * parameters.electrode_length)
+
+        loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
+        S['top_in', 'top_out'] = S['top_out', 'top_in'] = np.exp(1j * phase) * loss
+
+        phase = 2.0 * np.pi / env.wavelength * (
+                    neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage * parameters.electrode_length)
+
+        loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
+        S['bottom_in', 'bottom_out'] = S['bottom_out', 'bottom_in'] = np.exp(1j * phase) * loss
+
+    def calculate_signals(parameters, env, output_signals, y, t, input_signals):
+        dneff = -(parameters.n_g - parameters.n_eff) / parameters.center_wavelength
+        neff = parameters.n_eff + (env.wavelength - parameters.center_wavelength) * dneff
+
+        loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
+
+        # First-order approximation of the delay
+        delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
+
+        switching_voltage = parameters.vpi_l / parameters.electrode_length * 1e4
+
+        dn_dv = parameters.center_wavelength / (2.0 * parameters.electrode_length * switching_voltage)
+
+        phase = 2 * np.pi / env.wavelength * (
+                    neff * parameters.bottom_wg_length - dn_dv * y['voltage_bottom'] * parameters.electrode_length)
+        a = loss * np.exp(1j * phase)
+        output_signals['bottom_out'] = a * input_signals['bottom_in', t - delay]
+        output_signals['bottom_in'] = a * input_signals['bottom_out', t - delay]
+
+        loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
+        phase = 2 * np.pi / env.wavelength * (
+                    neff * parameters.top_wg_length + dn_dv * y['voltage_top'] * parameters.electrode_length)
+        delay = parameters.top_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
+        a = loss * np.exp(1j * phase)
+        output_signals['top_out'] = a * input_signals['top_in', t - delay]
+        output_signals['top_in'] = a * input_signals['top_out', t - delay]
+
+    def calculate_dydt(parameters, env, dydt, y, t, input_signals):
+        tau = 1.0 / (2.0 * np.pi * parameters.bandwidth)
+        dydt['voltage_bottom'] = ((input_signals['signal'] - input_signals['bottom_ground']) - y[
+            'voltage_bottom']) / tau
+        dydt['voltage_top'] = ((input_signals['signal'] - input_signals['top_ground']) - y['voltage_top']) / tau
 
 
 class CPWElectrode(i3.PCell):
@@ -337,14 +451,14 @@ class CPWElectrodeWithWaveguides(i3.PCell):
                                     'top_wg:out': 'top_out',
                                     'bottom_wg:in': 'bottom_in',
                                     'bottom_wg:out': 'bottom_out',
-                                    'top_wg_2:in': 'top_in_2',
-                                    'top_wg_2:out': 'top_out_2',
-                                    'bottom_wg_2:in': 'bottom_in_2',
-                                    'bottom_wg_2:out': 'bottom_out_2',
+                                    'top_wg_2:in': 'top_in_2',#
+                                    'top_wg_2:out': 'top_out_2',#
+                                    'bottom_wg_2:in': 'bottom_in_2',#
+                                    'bottom_wg_2:out': 'bottom_out_2',#
                                     'electrode:top_ground': 'top_ground',
-                                    'electrode:top_signal': 'top_signal',
-                                    'electrode:middle_ground': 'middle_ground',
-                                    'electrode:bottom_signal': 'bottom_signal',
+                                    'electrode:top_signal': 'top_signal',#
+                                    'electrode:middle_ground': 'middle_ground',#
+                                    'electrode:bottom_signal': 'bottom_signal',#
                                     'electrode:bottom_ground': 'bottom_ground',
                                     })
 
