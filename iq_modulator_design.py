@@ -508,6 +508,7 @@ class IQModulator(i3.PCell):
                 instances.update({'top_bend': top_bend,
                                   'bottom_bend': bottom_bend})
 
+            # if self.with_delays and not self.delay_at_input:
             phase_shifter_pos_x = self.phase_modulator.ports['top_in'].position[0] - self.phase_shifter_electrode_separation - \
                                   self.top_phase_shifter.ports['out'].position[0]
 
@@ -523,6 +524,17 @@ class IQModulator(i3.PCell):
 
                     # x position of main splitter
                     splitter_pos_x_main = - self.top_phase_shifter.ports['in'].position[0]  - self.splitter.ports['out1'].position[0] - straight_stub_length
+
+                    # x position of top and bottom combiners
+                    combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
+                                     self.combiner.ports['in1'].position[0] + (self.hot_taper_width - 50)
+
+                    combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
+                                       self.combiner.ports['in1'].position[0] + (self.hot_taper_width - 50)
+
+                    # x position of main combiner
+                    combiner_pos_x_main = combiner_pos_x + self.bottom_phase_shifter.ports['out'].position[
+                        0] + self.centre_width + straight_stub_length + self.hot_taper_width + self.bend_length
                 else:
                     # x position of top splitter
                     splitter_pos_x = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[0] - self.bend_length - \
@@ -534,6 +546,18 @@ class IQModulator(i3.PCell):
 
                     # x position of main splitter
                     splitter_pos_x_main = - self.top_phase_shifter.ports['in'].position[0] - self.splitter.ports['out1'].position[0] - straight_stub_length
+
+                    # x position of top and bottom combiners
+                    combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
+                                     self.combiner.ports['in1'].position[0] + (self.hot_taper_width - 50)
+
+                    combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
+                                       self.combiner.ports['in1'].position[0] + (self.hot_taper_width - 50)
+
+                    # x position of main combiner
+                    combiner_pos_x_main = combiner_pos_x + self.bottom_phase_shifter.ports['out'].position[
+                        0] + self.centre_width + straight_stub_length + self.hot_taper_width + self.bend_length
+
             else:
                 # x position of top splitter
                 splitter_pos_x = phase_shifter_pos_x - self.top_phase_shifter.ports['in'].position[0] - self.bend_length - \
@@ -546,15 +570,15 @@ class IQModulator(i3.PCell):
                 # x position of main splitter
                 splitter_pos_x_main = splitter_pos_x - self.splitter.ports['out1'].position[0] - self.centre_width - self.bend_length - self.hot_taper_width
 
-            # x position of top and bottom combiners
-            combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
-                             self.combiner.ports['in1'].position[0] + (self.hot_taper_width-50)
+                # x position of top and bottom combiners
+                combiner_pos_x = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
+                                 self.combiner.ports['in1'].position[0] + (self.hot_taper_width-50)
 
-            combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
-                               self.combiner.ports['in1'].position[0] + (self.hot_taper_width-50)
+                combiner_pos_x_2 = self.phase_modulator.ports['top_out'].position[0] + self.bend_length - \
+                                   self.combiner.ports['in1'].position[0] + (self.hot_taper_width-50)
 
-            # x position of main combiner
-            combiner_pos_x_main = combiner_pos_x + self.bottom_phase_shifter.ports['out'].position[0] + self.centre_width + straight_stub_length + self.hot_taper_width + self.bend_length
+                # x position of main combiner
+                combiner_pos_x_main = combiner_pos_x + self.bottom_phase_shifter.ports['out'].position[0] + self.centre_width + straight_stub_length + self.hot_taper_width + self.bend_length
 
             specs=[
                 i3.Place('phase_modulator', (0, 0)),
@@ -598,29 +622,37 @@ class IQModulator(i3.PCell):
             ]
 
             if self.with_delays:
-                specs.append(i3.Place('splitter_main:out1', (splitter_pos_x_main, 0), relative_to='splitter:in'))
-                specs.append(i3.ConnectManhattan([
-                        ("splitter_main:out1", "splitter:in"),
-                        ],
-                        bend_radius=self.bend_radius
-                    )
-                )
-                specs.append(i3.ConnectManhattan([
-                        ("splitter_main:out2", "splitter_2:in")
-                        ],
-                        control_points=[i3.H(-2*self.bend_radius-10, relative_to="splitter_2:in")],
-                        bend_radius=self.bend_radius
-                    )
-                )
+                if self.delay_at_input:
+                    specs += [
+                        i3.Place('splitter_main:out1', (splitter_pos_x_main, 0), relative_to='splitter:in'),
+                        i3.Place('top_phase_shifter',
+                                 (phase_shifter_pos_x, self.phase_modulator.ports['top_in'].position[1])),
+                        i3.Place('bottom_phase_shifter',
+                                 (phase_shifter_pos_x, self.phase_modulator.ports['bottom_in'].position[1])),
+                        i3.FlipV('bottom_phase_shifter'),
+                        i3.Place('bottom_phase_shifter_2',
+                                 (phase_shifter_pos_x, -self.phase_modulator.ports['top_in'].position[1])),
+                        i3.Place('top_phase_shifter_2',
+                                 (phase_shifter_pos_x, -self.phase_modulator.ports['bottom_in'].position[1])),
+                        i3.FlipV('bottom_phase_shifter_2'),
+                        i3.ConnectManhattan([("splitter_main:out1", "splitter:in")],
+                                            bend_radius=self.bend_radius),
+                        i3.ConnectManhattan([("splitter_main:out2", "splitter_2:in")],
+                                            control_points=[i3.H(-2 * self.bend_radius - 5, relative_to="splitter_2:in")],
+                                            bend_radius=self.bend_radius),
+                    ]
+                else:
+                    specs += [
+                        i3.Place('splitter_main:out1', (splitter_pos_x_main, 0), relative_to='splitter:in')
+                    ]
             else:
-                specs.append(i3.Place('splitter_main', (splitter_pos_x_main, 0)))
-                specs.append(i3.ConnectBend([
+                specs += [
+                    i3.Place('splitter_main', (splitter_pos_x_main, 0)),
+                    i3.ConnectBend([
                         ("splitter_main:out1", "splitter:in"),
-                        ("splitter_main:out2", "splitter_2:in")
-                        ],
-                        bend_radius=self.bend_radius
-                    )
-                )
+                        ("splitter_main:out2", "splitter_2:in")],
+                        bend_radius=self.bend_radius)
+                ]
 
             if self.with_delays:
                 if self.delay_at_input:
