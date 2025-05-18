@@ -642,6 +642,9 @@ class IQModulator(i3.PCell):
                                             bend_radius=self.bend_radius),
                     ]
                 else:
+                    # TODO
+                    # NEEDS TO BE DONE, IS WHEN delay_at_input=False
+                    # WILL NEED OTHER THINGS CHANGED AS WELL
                     specs += [
                         i3.Place('splitter_main:out1', (splitter_pos_x_main, 0), relative_to='splitter:in')
                     ]
