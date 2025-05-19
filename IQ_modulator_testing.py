@@ -29,8 +29,8 @@ class TestCircuit(i3.Circuit):
 
         insts = {
             "iq_modulator": self.iq_modulator,
-            "gc_1": gc,
-            "gc_2": gc,
+            # "gc_1": gc,
+            # "gc_2": gc,
             # "pad_1": pad,
             # "pad_2": pad,
             # "pad_3": pad,
@@ -46,8 +46,8 @@ class TestCircuit(i3.Circuit):
 
         specs = [
             i3.Place("iq_modulator", (0, 0)),
-            i3.Place("gc_1", (-self.gc_x_spacing/2, iq_mod_width/2 + 100), angle=270.0),
-            i3.Place("gc_2", (self.gc_x_spacing/2, iq_mod_width/2 + 100), angle=270.0),
+            # i3.Place("gc_1", (-self.gc_x_spacing/2, iq_mod_width/2 + 100), angle=270.0),
+            # i3.Place("gc_2", (self.gc_x_spacing/2, iq_mod_width/2 + 100), angle=270.0),
             # i3.Place("pad_1", (-self.pad_x_spacing, pad_y_pos)),
             # i3.Place("pad_2", (0, pad_y_pos)),
             # i3.Place("pad_3", (self.pad_x_spacing, pad_y_pos)),
@@ -62,23 +62,20 @@ class TestCircuit(i3.Circuit):
         return ports
 
 if __name__ == '__main__':
+
+
     circuit = TestCircuit()
+    # circuit.Layout().visualize(annotate=True)
 
-    circuit.Layout().visualize(annotate=True)
+    circuit_model = circuit.CircuitModel()
 
-    # circuit = TestCircuit()
-    # circuit_model = circuit.CircuitModel()
-    #
-    # wavelengths = np.linspace(1.5, 1.6, 501)
-    #
-    # S_model = circuit_model.get_smatrix(wavelengths=wavelengths)
-    #
-    # plt.plot(wavelengths, i3.signal_power_dB(S_total["out1", "in"]), linewidth=2, label="out1")
-    # plt.plot(wavelengths, i3.signal_power_dB(S_total["out2", "in"]), linewidth=2, label="out2")
-    # plt.plot(wavelengths, i3.signal_power_dB(S_total["out3", "in"]), linewidth=2, label="out3")
-    # plt.plot(wavelengths, i3.signal_power_dB(S_total["out4", "in"]), linewidth=2, label="out4")
-    # plt.xlabel(r"Wavelength [$\mu$m]", fontsize=16)  # add a label to the x-axis
-    # plt.ylabel("Transmission [dB]", fontsize=16)
-    # plt.ylim([-10, 0])
-    # plt.legend(fontsize=14)  # create a legend from the plt.plot labels
-    # plt.show()  # show the graph
+    # frequency sweep simulation
+    wavelengths = np.linspace(1.5, 1.6, 501)
+
+    S_model = circuit_model.get_smatrix(wavelengths=wavelengths)
+
+    plt.plot(wavelengths, i3.signal_power_dB(S_model["out", "in"]), linewidth=2, label="out")
+    plt.xlabel(r"Wavelength [$\mu$m]", fontsize=16)  # add a label to the x-axis
+    plt.ylabel("Transmission [dB]", fontsize=16)
+    plt.legend(fontsize=14)  # create a legend from the plt.plot labels
+    plt.show()  # show the graph
