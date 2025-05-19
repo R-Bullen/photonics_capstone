@@ -18,7 +18,7 @@ from asp_sin_lnoi_photonics.components.modulator.mzm.pcell.connector import bend
 
 __all__ = ["IQModulator"]
 
-class PushPullModulatorModel(CompactModel):
+class CustomPushPullModulatorModel(CompactModel):
     """
     Model for a push-pull modulator with two optical waveguides in the electrode gaps.
 
@@ -64,13 +64,20 @@ class PushPullModulatorModel(CompactModel):
         OpticalTerm(name='top_out'),
         OpticalTerm(name='bottom_in'),
         OpticalTerm(name='bottom_out'),
-        ElectricalTerm(name='signal'),
-        ElectricalTerm(name='bottom_ground'),
-        ElectricalTerm(name='top_ground')
+        OpticalTerm(name='top_in_2'),
+        OpticalTerm(name='top_out_2'),
+        OpticalTerm(name='bottom_in_2'),
+        OpticalTerm(name='bottom_out_2'),
+        ElectricalTerm(name='top_ground'),
+        ElectricalTerm(name='top_signal'),
+        ElectricalTerm(name='middle_ground'),
+        ElectricalTerm(name='bottom_signal'),
+        ElectricalTerm(name='bottom_ground')
     ]
 
     states = [
         'voltage_bottom',
+        'voltage_middle',
         'voltage_top',
     ]
 
@@ -86,12 +93,14 @@ class PushPullModulatorModel(CompactModel):
 
         loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
         S['top_in', 'top_out'] = S['top_out', 'top_in'] = np.exp(1j * phase) * loss
+        S['top_in_2', 'top_out_2'] = S['top_out_2', 'top_in_2'] = np.exp(1j * phase) * loss
 
         phase = 2.0 * np.pi / env.wavelength * (
                     neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage * parameters.electrode_length)
 
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
         S['bottom_in', 'bottom_out'] = S['bottom_out', 'bottom_in'] = np.exp(1j * phase) * loss
+        S['bottom_in_2', 'bottom_out_2'] = S['bottom_out_2', 'bottom_in_2'] = np.exp(1j * phase) * loss
 
     def calculate_signals(parameters, env, output_signals, y, t, input_signals):
         dneff = -(parameters.n_g - parameters.n_eff) / parameters.center_wavelength
@@ -111,6 +120,8 @@ class PushPullModulatorModel(CompactModel):
         a = loss * np.exp(1j * phase)
         output_signals['bottom_out'] = a * input_signals['bottom_in', t - delay]
         output_signals['bottom_in'] = a * input_signals['bottom_out', t - delay]
+        output_signals['bottom_out_2'] = a * input_signals['bottom_in_2', t - delay]
+        output_signals['bottom_in_2'] = a * input_signals['bottom_out_2', t - delay]
 
         loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
         phase = 2 * np.pi / env.wavelength * (
@@ -119,11 +130,13 @@ class PushPullModulatorModel(CompactModel):
         a = loss * np.exp(1j * phase)
         output_signals['top_out'] = a * input_signals['top_in', t - delay]
         output_signals['top_in'] = a * input_signals['top_out', t - delay]
+        output_signals['top_out_2'] = a * input_signals['top_in_2', t - delay]
+        output_signals['top_in_2'] = a * input_signals['top_out_2', t - delay]
 
     def calculate_dydt(parameters, env, dydt, y, t, input_signals):
         tau = 1.0 / (2.0 * np.pi * parameters.bandwidth)
-        dydt['voltage_bottom'] = ((input_signals['signal'] - input_signals['bottom_ground']) - y[
-            'voltage_bottom']) / tau
+        dydt['voltage_bottom'] = ((input_signals['signal'] - input_signals['bottom_ground']) - y['voltage_bottom']) / tau
+        dydt['voltage_middle'] = ((input_signals['signal'] - input_signals['middle_ground']) - y['voltage_middle']) / tau
         dydt['voltage_top'] = ((input_signals['signal'] - input_signals['top_ground']) - y['voltage_top']) / tau
 
 
@@ -475,7 +488,7 @@ class CPWElectrodeWithWaveguides(i3.PCell):
             lv = self.cell.get_default_view(i3.LayoutView)
             top_wg_length = lv.instances['top_wg'].reference.trace_length()
             bottom_wg_length = lv.instances['bottom_wg'].reference.trace_length()
-            return PushPullModulatorModel(
+            return CustomPushPullModulatorModel(
                 n_g=wg_tmpl_cm.n_g,
                 n_eff=wg_tmpl_cm.n_eff,
                 center_wavelength=wg_tmpl_cm.center_wavelength,
