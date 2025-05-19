@@ -135,9 +135,10 @@ class CustomPushPullModulatorModel(CompactModel):
 
     def calculate_dydt(parameters, env, dydt, y, t, input_signals):
         tau = 1.0 / (2.0 * np.pi * parameters.bandwidth)
-        dydt['voltage_bottom'] = ((input_signals['signal'] - input_signals['bottom_ground']) - y['voltage_bottom']) / tau
-        dydt['voltage_middle'] = ((input_signals['signal'] - input_signals['middle_ground']) - y['voltage_middle']) / tau
-        dydt['voltage_top'] = ((input_signals['signal'] - input_signals['top_ground']) - y['voltage_top']) / tau
+        dydt['voltage_bottom'] = ((input_signals['bottom_signal'] - input_signals['bottom_ground']) - y['voltage_bottom']) / tau
+        # not sure about this
+        # dydt['voltage_middle'] = ((input_signals['bottom_signal'] + input_signals['top_signal'] - input_signals['middle_ground']) - y['voltage_middle']) / tau
+        dydt['voltage_top'] = ((input_signals['top_signal'] - input_signals['top_ground']) - y['voltage_top']) / tau
 
 
 class CPWElectrode(i3.PCell):
