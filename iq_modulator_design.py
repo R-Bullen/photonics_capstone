@@ -55,7 +55,8 @@ class CustomPushPullModulatorModel(CompactModel):
         'bottom_wg_length',
         'electrode_length',
         'vpi_l',
-        'voltage',
+        'voltage_top',
+        'voltage_bottom',
         'bandwidth'
     ]
 
@@ -76,9 +77,10 @@ class CustomPushPullModulatorModel(CompactModel):
     ]
 
     states = [
-        'voltage_bottom',
-        'voltage_middle',
-        'voltage_top',
+        'voltage_1',
+        'voltage_2',
+        'voltage_3',
+        'voltage_4',
     ]
 
     def calculate_smatrix(parameters, env, S):
@@ -88,57 +90,77 @@ class CustomPushPullModulatorModel(CompactModel):
 
         switching_voltage = parameters.vpi_l / parameters.electrode_length * 1e4
         dn_dv = parameters.center_wavelength / (2.0 * parameters.electrode_length * switching_voltage)
-        phase = 2.0 * np.pi / env.wavelength * (
-                    neff_total * parameters.top_wg_length + dn_dv * parameters.voltage * parameters.electrode_length)
 
+        phase = 2.0 * np.pi / env.wavelength * (
+                    neff_total * parameters.top_wg_length + dn_dv * parameters.voltage_top * parameters.electrode_length)
         loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
         S['top_in', 'top_out'] = S['top_out', 'top_in'] = np.exp(1j * phase) * loss
+
+        phase = 2.0 * np.pi / env.wavelength * (
+                neff_total * parameters.top_wg_length + dn_dv * parameters.voltage_bottom * parameters.electrode_length)
+        loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
         S['top_in_2', 'top_out_2'] = S['top_out_2', 'top_in_2'] = np.exp(1j * phase) * loss
 
         phase = 2.0 * np.pi / env.wavelength * (
-                    neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage * parameters.electrode_length)
-
+                    neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage_top * parameters.electrode_length)
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
         S['bottom_in', 'bottom_out'] = S['bottom_out', 'bottom_in'] = np.exp(1j * phase) * loss
+
+        phase = 2.0 * np.pi / env.wavelength * (
+                neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage_bottom * parameters.electrode_length)
+        loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
         S['bottom_in_2', 'bottom_out_2'] = S['bottom_out_2', 'bottom_in_2'] = np.exp(1j * phase) * loss
 
     def calculate_signals(parameters, env, output_signals, y, t, input_signals):
         dneff = -(parameters.n_g - parameters.n_eff) / parameters.center_wavelength
         neff = parameters.n_eff + (env.wavelength - parameters.center_wavelength) * dneff
 
-        loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
-
-        # First-order approximation of the delay
-        delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
-
         switching_voltage = parameters.vpi_l / parameters.electrode_length * 1e4
-
         dn_dv = parameters.center_wavelength / (2.0 * parameters.electrode_length * switching_voltage)
 
-        phase = 2 * np.pi / env.wavelength * (
-                    neff * parameters.bottom_wg_length - dn_dv * y['voltage_bottom'] * parameters.electrode_length)
-        a = loss * np.exp(1j * phase)
-        output_signals['bottom_out'] = a * input_signals['bottom_in', t - delay]
-        output_signals['bottom_in'] = a * input_signals['bottom_out', t - delay]
-        output_signals['bottom_out_2'] = a * input_signals['bottom_in_2', t - delay]
-        output_signals['bottom_in_2'] = a * input_signals['bottom_out_2', t - delay]
 
-        loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
+        # First-order approximation of the delay
+        loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
+        delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
         phase = 2 * np.pi / env.wavelength * (
-                    neff * parameters.top_wg_length + dn_dv * y['voltage_top'] * parameters.electrode_length)
-        delay = parameters.top_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
+                    neff * parameters.bottom_wg_length - dn_dv * y['voltage_1'] * parameters.electrode_length)
         a = loss * np.exp(1j * phase)
         output_signals['top_out'] = a * input_signals['top_in', t - delay]
         output_signals['top_in'] = a * input_signals['top_out', t - delay]
+
+        # second waveguide from the top
+        loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
+        delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
+        phase = 2 * np.pi / env.wavelength * (
+                neff * parameters.bottom_wg_length - dn_dv * y['voltage_2'] * parameters.electrode_length)
+        a = loss * np.exp(1j * phase)
+        output_signals['bottom_out'] = a * input_signals['bottom_in', t - delay]
+        output_signals['bottom_in'] = a * input_signals['bottom_out', t - delay]
+
+        # third waveguide from the top
+        loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
+        delay = parameters.top_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
+        phase = 2 * np.pi / env.wavelength * (
+                    neff * parameters.top_wg_length + dn_dv * y['voltage_3'] * parameters.electrode_length)
+        a = loss * np.exp(1j * phase)
         output_signals['top_out_2'] = a * input_signals['top_in_2', t - delay]
         output_signals['top_in_2'] = a * input_signals['top_out_2', t - delay]
 
+        # fourth waveguide from the top
+        loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
+        delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
+        phase = 2 * np.pi / env.wavelength * (
+                neff * parameters.bottom_wg_length - dn_dv * y['voltage_4'] * parameters.electrode_length)
+        a = loss * np.exp(1j * phase)
+        output_signals['bottom_out_2'] = a * input_signals['bottom_in_2', t - delay]
+        output_signals['bottom_in_2'] = a * input_signals['bottom_out_2', t - delay]
+
     def calculate_dydt(parameters, env, dydt, y, t, input_signals):
         tau = 1.0 / (2.0 * np.pi * parameters.bandwidth)
-        dydt['voltage_bottom'] = ((input_signals['bottom_signal'] - input_signals['bottom_ground']) - y['voltage_bottom']) / tau
-        # not sure about this
-        # dydt['voltage_middle'] = ((input_signals['bottom_signal'] + input_signals['top_signal'] - input_signals['middle_ground']) - y['voltage_middle']) / tau
-        dydt['voltage_top'] = ((input_signals['top_signal'] - input_signals['top_ground']) - y['voltage_top']) / tau
+        dydt['voltage_1'] = ((input_signals['top_signal'] - input_signals['top_ground']) - y['voltage_1']) / tau
+        dydt['voltage_2'] = ((input_signals['top_signal'] - input_signals['middle_ground']) - y['voltage_2']) / tau
+        dydt['voltage_3'] = ((input_signals['bottom_signal'] - input_signals['middle_ground']) - y['voltage_3']) / tau
+        dydt['voltage_4'] = ((input_signals['bottom_signal'] - input_signals['bottom_ground']) - y['voltage_4']) / tau
 
 
 class CPWElectrode(i3.PCell):
@@ -481,7 +503,8 @@ class CPWElectrodeWithWaveguides(i3.PCell):
 
     class CircuitModel(i3.CircuitModelView):
         vpi_l = i3.PositiveNumberProperty(default=5.0, doc="VpiL product of the single-drive phase modulator in V*cm")
-        voltage = i3.NumberProperty(default=0, doc='voltage applied to the electrode in V')
+        voltage_top = i3.NumberProperty(default=0, doc='voltage applied to the top electrode in V')
+        voltage_bottom = i3.NumberProperty(default=0, doc='voltage applied to the bottom electrode in V')
         bandwidth = i3.PositiveNumberProperty(default=40e9, doc="electrial bandwidth of the modulator in Hz")
 
         def _generate_model(self):
@@ -498,7 +521,8 @@ class CPWElectrodeWithWaveguides(i3.PCell):
                 bottom_wg_length=bottom_wg_length,
                 electrode_length=lv.electrode_length,
                 vpi_l=self.vpi_l,
-                voltage=self.voltage,
+                voltage_top=self.voltage_top,
+                voltage_bottom=self.voltage_bottom,
                 bandwidth=self.bandwidth
             )
 
@@ -896,13 +920,15 @@ class IQModulator(i3.PCell):
 
     class CircuitModel(i3.CircuitModelView):
         vpi_l = i3.PositiveNumberProperty(default=5.0, doc="VpiL product of the phase modulator in V*cm")
-        voltage = i3.NumberProperty(default=0, doc='voltage applied to the electrode in V')
+        voltage_top = i3.NumberProperty(default=0, doc='voltage applied to the top electrode in V')
+        voltage_bottom = i3.NumberProperty(default=0, doc='voltage applied to the bottom electrode in V')
         bandwidth = i3.PositiveNumberProperty(default=40e9, doc="electrial bandwidth of the modulator in Hz")
 
         def _default_phase_modulator(self):
             pm_cm = self.cell.phase_modulator.get_default_view(self)
             pm_cm.set(vpi_l=self.vpi_l,
-                      voltage=self.voltage,
+                      voltage_top=self.voltage_top,
+                      voltage_bottom=self.voltage_bottom,
                       bandwidth=self.bandwidth
                       )
             return pm_cm
