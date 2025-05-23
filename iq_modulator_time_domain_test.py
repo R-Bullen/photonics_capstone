@@ -18,7 +18,7 @@ lv = iq_mod.Layout(electrode_length=8000, hot_width=50, electrode_gap=9)
 
 
 # Find the quadrature biasing wavelength
-cm = iq_mod.CircuitModel()
+cm = iq_mod.CircuitModel(bandwidth=10e9)
 
 wavelengths = np.linspace(1.55, 1.552, 101)
 S = cm.get_smatrix(wavelengths=wavelengths)
@@ -37,9 +37,18 @@ print("Biasing wavelength: {}".format(biasing_wl))
 # Setup the input signal functions
 
 # A square-wave voltage to the PM electrode
-frequency = 10e9  # Frequency in Hz
-def elec_signal(t):
-    T = 1.0 / frequency
+frequency_top = 10e9  # Frequency in Hz
+def elec_signal_top(t):
+    T = 1.0 / frequency_top
+    n = int(t / T)
+    if t - n * T < T/2:
+        return -1.0
+    else:
+        return 1.0
+
+frequency_bottom = frequency_top * 2
+def elec_signal_bottom(t):
+    T = 1.0 / frequency_bottom
     n = int(t / T)
     if t - n * T < T/2:
         return -1.0
@@ -58,9 +67,9 @@ testbench = i3.ConnectComponents(
     child_cells={
         'DUT': iq_mod,
         'el_signal_1': i3.FunctionExcitation(port_domain=i3.ElectricalDomain,
-                                               excitation_function=elec_signal),
+                                               excitation_function=elec_signal_top),
         'el_signal_2': i3.FunctionExcitation(port_domain=i3.ElectricalDomain,
-                                               excitation_function=elec_signal),
+                                               excitation_function=elec_signal_bottom),
         'el_ground_1': i3.FunctionExcitation(port_domain=i3.ElectricalDomain,
                                                excitation_function=elec_ground),
         'el_ground_2': i3.FunctionExcitation(port_domain=i3.ElectricalDomain,
@@ -84,20 +93,26 @@ testbench = i3.ConnectComponents(
 
 
 testbench_cm = testbench.CircuitModel()
-end_time = 1.0 / frequency * 4
+end_time = 1.0 / frequency_top * 4
 results = testbench_cm.get_time_response(t0=0, t1=end_time, dt=end_time / 1000, center_wavelength=biasing_wl)
 
-fig, axs = plt.subplots(nrows=2, ncols=1, figsize=(6, 8))
+fig, axs = plt.subplots(nrows=3, ncols=1, figsize=(6, 8))
+
 
 axs[0].set_title("Electrical signal")
 axs[0].plot(results.timesteps[1:] * 1e9, results['el_signal_1'][1:], 'g-+')
 axs[0].set_xlabel("Time [ps]")
 axs[0].set_ylabel("Voltage [V]")
 
-axs[1].set_title("Optical output")
+axs[1].set_title("Electrical signal")
+axs[1].plot(results.timesteps[1:] * 1e9, results['el_signal_2'][1:], 'g-+')
 axs[1].set_xlabel("Time [ps]")
-axs[1].set_ylabel("Power [au]")
-axs[1].plot(results.timesteps[1:] * 1e9, (np.abs(results['opt_out'][1:]) ** 2), 'r', label='out')
+axs[1].set_ylabel("Voltage [V]")
+
+axs[2].set_title("Optical output")
+axs[2].set_xlabel("Time [ps]")
+axs[2].set_ylabel("Power [au]")
+axs[2].plot(results.timesteps[1:] * 1e9, (np.abs(results['opt_out'][1:]) ** 2), 'r', label='out')
 
 axs[1].legend()
 
