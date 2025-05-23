@@ -64,8 +64,8 @@ class TestCircuit(i3.Circuit):
 if __name__ == '__main__':
 
 
-    circuit = TestCircuit()
-    # circuit.Layout().visualize(annotate=True)
+    circuit = IQModulator()
+    # circuit.Layout(centre_width=500).visualize(annotate=True)
 
     circuit_model = circuit.CircuitModel()
 
