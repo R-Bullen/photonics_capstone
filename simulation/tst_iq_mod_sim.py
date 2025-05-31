@@ -1,10 +1,9 @@
-import asp_sin_lnoi_photonics.all as asp
 import numpy as np
 import matplotlib.pyplot as plt
 import ipkiss3.all as i3
 
 from components.iq_modulator_design import IQModulator
-from tst_SimFunc import *
+from deprecated.tst_SimFunc import *
 
 mod = IQModulator()
 lv = mod.Layout()
