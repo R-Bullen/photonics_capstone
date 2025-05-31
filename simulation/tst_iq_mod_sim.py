@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import ipkiss3.all as i3
 
-from iq_modulator_design import IQModulator
+from components.iq_modulator_design import IQModulator
 from tst_SimFunc import *
 
 mod = IQModulator()

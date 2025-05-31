@@ -1,12 +1,10 @@
-from matplotlib.pyplot import annotate
-
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
 import numpy as np
 import pylab as plt
 
 from asp_sin_lnoi_photonics.components.grating_couplers.pcell import GRATING_COUPLER_TE1550_RIBZ
-from iq_modulator_design import IQModulator
+from components.iq_modulator_design import IQModulator
 
 class TestCircuit(i3.Circuit):
     # parameters

@@ -1,7 +1,7 @@
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
 
-from mzm_custom import MZModulator1x1 as CustomMZModulator1x1
+from deprecated.mzm_custom import MZModulator1x1 as CustomMZModulator1x1
 
 
 # MMI1x2 -> MZM           -> MMI2x1

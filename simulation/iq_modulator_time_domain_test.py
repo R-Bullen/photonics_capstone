@@ -2,13 +2,12 @@
 # asp_sin_lnoi_photonics PDK
 # Copyright (2023) RMIT University
 #
-
 import asp_sin_lnoi_photonics.all as asp
 import numpy as np
 import matplotlib.pyplot as plt
 import ipkiss3.all as i3
 
-from iq_modulator_design import IQModulator
+from components.iq_modulator_design import IQModulator
 
 iq_mod = IQModulator(with_delays=True)
 
