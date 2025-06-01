@@ -9,7 +9,7 @@ import random
 import numpy as np
 
 import ipkiss3.all as i3
-from si_fab.benches.sources import random_bitsource, rand_normal
+from simulation.benches.sources import random_bitsource, rand_normal
 
 
 def simulate_modulation_mzm(

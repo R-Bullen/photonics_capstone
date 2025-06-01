@@ -63,21 +63,17 @@ if __name__ == '__main__':
 
 
     circuit = IQModulator()
-    circuit.Layout().visualize(annotate=True)
-    circuit.Layout().write_gdsii("IQ_mod_gds.gds")
-    # circuit.Layout().cross_section(cross_section_path=i3.Shape([(100.0, -50.0), (-100.0, 50.0)]),
-    # path_origin=-50.0,).visualize()
+    # circuit.Layout(centre_width=500).visualize(annotate=True)
 
+    circuit_model = circuit.CircuitModel()
 
-    # circuit_model = circuit.CircuitModel()
-    #
-    # # frequency sweep simulation
-    # wavelengths = np.linspace(1.5, 1.6, 501)
-    #
-    # S_model = circuit_model.get_smatrix(wavelengths=wavelengths)
-    #
-    # plt.plot(wavelengths, i3.signal_power_dB(S_model["out", "in"]), linewidth=2, label="out")
-    # plt.xlabel(r"Wavelength [$\mu$m]", fontsize=16)  # add a label to the x-axis
-    # plt.ylabel("Transmission [dB]", fontsize=16)
-    # plt.legend(fontsize=14)  # create a legend from the plt.plot labels
-    # plt.show()  # show the graph
+    # frequency sweep simulation
+    wavelengths = np.linspace(1.5, 1.6, 501)
+
+    S_model = circuit_model.get_smatrix(wavelengths=wavelengths)
+
+    plt.plot(wavelengths, i3.signal_power_dB(S_model["out", "in"]), linewidth=2, label="out")
+    plt.xlabel(r"Wavelength [$\mu$m]", fontsize=16)  # add a label to the x-axis
+    plt.ylabel("Transmission [dB]", fontsize=16)
+    plt.legend(fontsize=14)  # create a legend from the plt.plot labels
+    plt.show()  # show the graph
