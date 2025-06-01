@@ -1,7 +1,7 @@
-# Copyright (C) 2020-2024 Luceda Photonics
+# Adapt from Luceda Academy design example
 
 """
-Set up a testbench for an MZM.
+Set up a testbench for an 1x1 MZM.
 """
 
 import random
@@ -10,7 +10,6 @@ import numpy as np
 
 import ipkiss3.all as i3
 from simulation.benches.sources import random_bitsource, rand_normal
-
 
 def simulate_modulation_mzm(
     cell,
@@ -75,15 +74,14 @@ def simulate_modulation_mzm(
     signal = i3.FunctionExcitation(
         port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod(t) + rand_normal_dist(mod_noise)
     )
-    revsignal = i3.FunctionExcitation(
-        port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod(t) - rand_normal_dist(mod_noise)
-    )
+    
     mzm1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm1)
     mzm2 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm2)
+    mzm1_gnd = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+    mzm2_gnd = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
     gnd1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
     gnd2 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
-    gnd3 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
-
+    
     t0 = 0.0
     t1 = n_bytes / bit_rate
     dt = t1 / n_bytes / steps_per_bit
@@ -94,23 +92,23 @@ def simulate_modulation_mzm(
             "out": i3.Probe(port_domain=i3.OpticalDomain),
             "src_in": src_in,
             "sig": signal,
-            "revsig": revsignal,
             "gnd1": gnd1,
             "gnd2": gnd2,
-            "gnd3": gnd3,
             "mzm1": mzm1,
             "mzm2": mzm2,
+            "mzm1_gnd": mzm1_gnd,
+            "mzm2_gnd": mzm2_gnd,
         },
         links=[
             ("src_in:out", "DUT:in"),
             ("DUT:out", "out:in"),
-            ("DUT:ele1", "mzm1:out"),
-            ("DUT:ele2", "mzm2:out"),
-            ("DUT:SR_pad", "sig:out"),
-            ("DUT:SL_pad", "revsig:out"),
-            ("DUT:G1_pad", "gnd1:out"),
-            ("DUT:G2_pad", "gnd2:out"),
-            ("DUT:G3_pad", "gnd3:out"),
+            ("DUT:m1_1", "mzm1:out"),
+            ("DUT:m1_2", "mzm1_gnd:out"),
+            ("DUT:m2_1", "mzm2:out"),
+            ("DUT:m2_2", "mzm2_gnd:out"),
+            ("DUT:signal", "sig:out"),
+            ("DUT:ground_1", "gnd1:out"),
+            ("DUT:ground_2", "gnd2:out")
         ],
     )
 

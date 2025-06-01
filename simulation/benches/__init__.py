@@ -1,4 +1,4 @@
-# Copyright (C) 2020 Luceda Photonics
+# Copyright (C) 2020-2024 Luceda Photonics
 # This version of Luceda Academy and related packages
 # (hereafter referred to as Luceda Academy) is distributed under a proprietary License by Luceda
 # It does allow you to develop and distribute add-ons or plug-ins, but does

@@ -1,4 +1,6 @@
-# Copyright (C) 2020 Luceda Photonics
+# Direct copy from si_fab example
+#
+# Copyright (C) 2020-2024 Luceda Photonics
 # This version of Luceda Academy and related packages
 # (hereafter referred to as Luceda Academy) is distributed under a proprietary License by Luceda
 # It does allow you to develop and distribute add-ons or plug-ins, but does
@@ -13,11 +15,11 @@
 # EULA which was distributed along with this program.
 # It is located in the root of the distribution folder.
 
+from collections.abc import Callable
 import numpy as np
-import numba as nb
 
 
-def random_bitsource(bitrate, amplitude, n_bytes=100, seed=None):
+def random_bitsource(bitrate: float, amplitude: float, n_bytes: int = 100, seed=None):
     """Create a random bit source function f(t) with a given bitrate, end time and amplitude.
 
     Parameters
@@ -35,15 +37,14 @@ def random_bitsource(bitrate, amplitude, n_bytes=100, seed=None):
         PRBS function as a function of time.
 
     """
-
-    from numpy import random
+    from numba import njit
 
     if seed is not None:
         np.random.seed(seed)
 
-    data = (random.randint(0, 2, n_bytes) - 0.5) * 2
+    data = (np.random.randint(0, 2, n_bytes) - 0.5) * 2
 
-    @nb.jit()
+    @njit()
     def f_rbs(t):
         idx = int(t * bitrate)
         if idx >= n_bytes:
@@ -53,7 +54,7 @@ def random_bitsource(bitrate, amplitude, n_bytes=100, seed=None):
     return f_rbs
 
 
-def step_function(amplitude_0, amplitude_1, t_step):
+def step_function(amplitude_0: float, amplitude_1: float, t_step: float) -> Callable[[float], float]:
     """Create a step function f_step(t) between amplitude_0 and amplitude_1 at t_step.
 
     Parameters
@@ -69,7 +70,7 @@ def step_function(amplitude_0, amplitude_1, t_step):
 
     """
 
-    def f_step(t):
+    def f_step(t: float) -> float:
         if t >= t_step:
             return amplitude_1
         return amplitude_0
@@ -77,10 +78,8 @@ def step_function(amplitude_0, amplitude_1, t_step):
     return f_step
 
 
-@nb.jit()
-def rand_normal(sigma):
-    """Return a number normally distributed around zero.
-    It returns 0 if sigma==0.
+def rand_normal() -> Callable[[float], float]:
+    """Returns a numba jitted function that returns a float based on a normal distribution.
 
     Parameters
     ----------
@@ -89,11 +88,13 @@ def rand_normal(sigma):
 
     Returns
     -------
-    Random number.
+    Function that returns a random floating point number from a normal distribution around 0 with sigma deviation.
 
     """
+    from numba import njit
 
-    if sigma == 0:
-        return 0.0
-    else:
+    @njit()
+    def rand_normal_jitted(sigma: float) -> float:
         return np.random.normal(0, sigma)
+
+    return rand_normal_jitted
