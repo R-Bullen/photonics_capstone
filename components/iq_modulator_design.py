@@ -575,7 +575,7 @@ class IQModulator(i3.PCell):
         hot_width = i3.PositiveNumberProperty(default=23.0, doc="width of the hot electrode")
         ground_width = i3.PositiveNumberProperty(default=150.0, doc="width of the ground planes")
 
-        centre_width = i3.PositiveNumberProperty(default=150.0, doc="width of the centre ground electrode")
+        centre_width = i3.PositiveNumberProperty(default=165.0, doc="width of the centre ground electrode")
 
         electrode_gap = i3.PositiveNumberProperty(default=6.0, doc="gap between hot electrode and ground plane")
         taper_length = i3.PositiveNumberProperty(default=200.0, doc="the length of the taper")

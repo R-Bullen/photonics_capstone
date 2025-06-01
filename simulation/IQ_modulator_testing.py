@@ -63,17 +63,19 @@ if __name__ == '__main__':
 
 
     circuit = IQModulator()
-    # circuit.Layout(centre_width=500).visualize(annotate=True)
+    circuit.Layout().visualize(annotate=True)
+    circuit.Layout().write_gdsii("IQ_mod_gds.gds")
 
-    circuit_model = circuit.CircuitModel()
 
-    # frequency sweep simulation
-    wavelengths = np.linspace(1.5, 1.6, 501)
-
-    S_model = circuit_model.get_smatrix(wavelengths=wavelengths)
-
-    plt.plot(wavelengths, i3.signal_power_dB(S_model["out", "in"]), linewidth=2, label="out")
-    plt.xlabel(r"Wavelength [$\mu$m]", fontsize=16)  # add a label to the x-axis
-    plt.ylabel("Transmission [dB]", fontsize=16)
-    plt.legend(fontsize=14)  # create a legend from the plt.plot labels
-    plt.show()  # show the graph
+    # circuit_model = circuit.CircuitModel()
+    #
+    # # frequency sweep simulation
+    # wavelengths = np.linspace(1.5, 1.6, 501)
+    #
+    # S_model = circuit_model.get_smatrix(wavelengths=wavelengths)
+    #
+    # plt.plot(wavelengths, i3.signal_power_dB(S_model["out", "in"]), linewidth=2, label="out")
+    # plt.xlabel(r"Wavelength [$\mu$m]", fontsize=16)  # add a label to the x-axis
+    # plt.ylabel("Transmission [dB]", fontsize=16)
+    # plt.legend(fontsize=14)  # create a legend from the plt.plot labels
+    # plt.show()  # show the graph
