@@ -10,7 +10,7 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from simulation.simulate_mzm import simulate_modulation_mzm, result_modified_OOK
+from simulation.sim_functions.simulate_mzm import simulate_modulation_mzm, result_modified_OOK
 import numpy as np
 import matplotlib.pyplot as plt
 
