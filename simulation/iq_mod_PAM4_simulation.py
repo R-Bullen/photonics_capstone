@@ -10,7 +10,7 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from simulation.sim_functions.simulate_mzm import simulate_modulation_mzm, result_modified_OOK
+from simulation.sim_functions.simulate_mzm import simulate_modulation_PAM4, result_modified_OOK
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -63,19 +63,19 @@ cm.bandwidth = 25e9    # Modulator bandwidth (in Hz)
 
 num_symbols = 2**8
 samples_per_symbol = 2**7
-bit_rate = 50e9
+baud_rate = 50e9
 
-results = simulate_modulation_mzm(
+results = simulate_modulation_PAM4(
     cell=mzm,
-    mod_amplitude=rf_vpi / 2 * 0.8,
+    mod_amplitude=rf_vpi / 2 * 0.5,
     mod_noise=0.01,
     opt_amplitude=1.0,
     opt_noise=0.01,
     v_mzm1=0.0,  
     v_mzm2=0.0,
-    bit_rate=bit_rate,
+    symbol_rate=baud_rate,
     n_bytes=num_symbols,
-    steps_per_bit=samples_per_symbol,
+    steps_per_symbol=samples_per_symbol,
     center_wavelength=wl,
 )
 outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
@@ -103,8 +103,8 @@ plt.tight_layout()
 ########################################################################################################################
 
 data_stream = np.abs(results["out"]) ** 2
-time_step = 1.0 / (bit_rate * samples_per_symbol)
-eye = i3.EyeDiagram(data_stream, bit_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
+time_step = 1.0 / (baud_rate * samples_per_symbol)
+eye = i3.EyeDiagram(data_stream, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
 eye.visualize(show=False)
 
 ########################################################################################################################
@@ -112,7 +112,7 @@ eye.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res = result_modified_OOK(results, samples_per_symbol )
+res = result_modified_OOK(results, samples_per_symbol, sampling_point=0.8)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)

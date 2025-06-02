@@ -1,5 +1,5 @@
 
-"""Simulate an MZ modulator working in OOK modulation format. This is mainly based on Luceda Academy example.
+"""Simulate an MZ modulator working in BPSK modulation format. c
 
 This script generates several outputs:
 - visualize the layout in a matplotlib window (this pauses script execution)
@@ -10,7 +10,7 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from simulation.sim_functions.simulate_mzm import simulate_modulation_mzm, result_modified_OOK
+from simulation.sim_functions.simulate_mzm import simulate_modulation_mzm, result_modified_BPSK
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -28,35 +28,33 @@ lv = mzm.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9
 lv.visualize(annotate=True)
 
 ########################################################################################################################
-# Find the operating wavelength so that the modulator is operating at the quadrature biasing point
+# Find the operating wavelength so that the modulator is operating at the minimum transmission point
 ########################################################################################################################
-
 cm = mzm.CircuitModel()
 
 wavelengths = np.linspace(1.55, 1.555, 101)
 S = cm.get_smatrix(wavelengths=wavelengths)
 
 idx_min = np.argmin(np.abs(np.abs(S['out', 'in'])**2))
-idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
-wl = wavelengths[int((idx_min + idx_max) / 2)]
-print("Quadrature wavelength: {}".format(wl))
+wl = wavelengths[idx_min]
+print("Minimum transmission wavelength: {}".format(wl))
 
 plt.figure()
 plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
 plt.plot([wl*1e3, wl*1e3], [0, 1])
-plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
+plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][idx_min])**2 for x in wavelengths])
 plt.xlabel("Wavelength [nm]")
 plt.ylabel("Transmission [au]")
 plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
 plt.ylim(0, 1)
 plt.show()
-
+ 
 ########################################################################################################################
-# Simulation of a MZM working in OOK modulation format.
+# Simulation of a MZM working in BPSK modulation format.
 ########################################################################################################################
 
 # Define modulator characteristics
-rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
+rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)       # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
 cm.bandwidth = 25e9    # Modulator bandwidth (in Hz)
@@ -67,17 +65,18 @@ bit_rate = 50e9
 
 results = simulate_modulation_mzm(
     cell=mzm,
-    mod_amplitude=rf_vpi / 2 * 0.8,
+    mod_amplitude=rf_vpi/2,
     mod_noise=0.01,
     opt_amplitude=1.0,
     opt_noise=0.01,
-    v_mzm1=0.0,  
-    v_mzm2=0.0,
+    v_mzm1= 0,  
+    v_mzm2=0, 
     bit_rate=bit_rate,
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
     center_wavelength=wl,
 )
+
 outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
 titles = [
     "RF signal",
@@ -86,9 +85,8 @@ titles = [
     "Optical input",
     "Optical output",
 ]
-
 ylabels = ["voltage [V]", "voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
-process = [np.real, np.real, np.real, np.abs, np.abs]
+process = [np.real, np.real, np.real, np.abs, np.real]
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
     data = pr(results[out][1:])
@@ -112,7 +110,7 @@ eye.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res = result_modified_OOK(results, samples_per_symbol )
+res = result_modified_BPSK(results, samples_per_symbol)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)
