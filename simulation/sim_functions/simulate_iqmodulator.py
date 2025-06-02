@@ -9,7 +9,7 @@ import random
 import numpy as np
 
 import ipkiss3.all as i3
-from si_fab.benches.sources import random_bitsource, rand_normal
+from simulation.benches.sources import random_bitsource, rand_normal
 
 
 def simulate_modulation_iqmod(
@@ -141,30 +141,30 @@ def simulate_modulation_iqmod(
             "gnd6": gnd6,
             "ht_i": heater_i,
             "ht_q": heater_q,
-            "mzm_left1": mzm_left1,
-            "mzm_left2": mzm_left2,
-            "mzm_right1": mzm_right1,
-            "mzm_right2": mzm_right2,
+            # "mzm_left1": mzm_left1,
+            # "mzm_left2": mzm_left2,
+            # "mzm_right1": mzm_right1,
+            # "mzm_right2": mzm_right2,
         },
         links=[
-            ("src_in:out", "DUT:sp0"),
-            ("DUT:sp1", "out:in"),
-            ("DUT:hti0", "ht_i:out"),
-            ("DUT:hti1", "ht_q:out"),
-            ("DUT:mzmi0", "mzm_left1:out"),
-            ("DUT:mzmo0", "mzm_left2:out"),
-            ("DUT:mzmi1", "mzm_right1:out"),
-            ("DUT:mzmo1", "mzm_right2:out"),
-            ("DUT:mzmsl0", "sig_i:out"),
-            ("DUT:mzmsr0", "revsig_i:out"),
-            ("DUT:mzmsl1", "sig_q:out"),
-            ("DUT:mzmsr1", "revsig_q:out"),
-            ("DUT:mzmg10", "gnd1:out"),
-            ("DUT:mzmg20", "gnd2:out"),
-            ("DUT:mzmg30", "gnd3:out"),
-            ("DUT:mzmg11", "gnd4:out"),
-            ("DUT:mzmg21", "gnd5:out"),
-            ("DUT:mzmg31", "gnd6:out"),
+            ("src_in:out", "DUT:in"),
+            ("DUT:out", "out:in"),
+            ("DUT:in2_m2_1", "ht_i:out"),
+            ("DUT:out_m2_1", "ht_q:out"),
+            # ("DUT:mzmi0", "mzm_left1:out"),
+            # ("DUT:mzmo0", "mzm_left2:out"),
+            # ("DUT:mzmi1", "mzm_right1:out"),
+            # ("DUT:mzmo1", "mzm_right2:out"),
+            ("DUT:top_signal", "sig_i:out"),
+            # ("DUT:top_signal", "revsig_i:out"),
+            ("DUT:bottom_signal", "sig_q:out"),
+            # ("DUT:bottom_signal", "revsig_q:out"),
+            # ("DUT:in2_m2_2", "gnd1:out"),
+            ("DUT:out_m2_2", "gnd2:out"),
+            ("DUT:top_ground", "gnd3:out"),
+            ("DUT:middle_ground", "gnd4:out"),
+            # ("DUT:middle_ground", "gnd5:out"),
+            ("DUT:bottom_ground", "gnd6:out"),
         ],
     )
 
