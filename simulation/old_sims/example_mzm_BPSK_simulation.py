@@ -1,5 +1,5 @@
 
-"""Simulate an MZ modulator working in BPSK modulation format. This is mainly based on Luceda Academy example.
+"""Simulate an MZ modulator working in BPSK modulation format. c
 
 This script generates several outputs:
 - visualize the layout in a matplotlib window (this pauses script execution)
@@ -57,7 +57,11 @@ plt.show()
 rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)       # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
-cm.bandwidth = 50e9    # Modulator bandwidth (in Hz)
+cm.bandwidth = 25e9    # Modulator bandwidth (in Hz)
+
+num_symbols = 2**8
+samples_per_symbol = 2**7
+bit_rate = 50e9
 
 results = simulate_modulation_mzm(
     cell=mzm,
@@ -67,9 +71,9 @@ results = simulate_modulation_mzm(
     opt_noise=0.01,
     v_mzm1= 0,  
     v_mzm2=0, 
-    bit_rate=50e9,
-    n_bytes=2**8,
-    steps_per_bit=2**7,
+    bit_rate=bit_rate,
+    n_bytes=num_symbols,
+    steps_per_bit=samples_per_symbol,
     center_wavelength=wl,
 )
 
@@ -96,12 +100,9 @@ plt.tight_layout()
 # Plot EyeDiagram
 ########################################################################################################################
 
-num_symbols = 2**8
-samples_per_symbol = 2**7
 data_stream = np.abs(results["out"]) ** 2
-baud_rate = 50e9
-time_step = 1.0 / (baud_rate * samples_per_symbol)
-eye = i3.EyeDiagram(data_stream, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
+time_step = 1.0 / (bit_rate * samples_per_symbol)
+eye = i3.EyeDiagram(data_stream, bit_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
 eye.visualize(show=False)
 
 ########################################################################################################################
@@ -109,7 +110,7 @@ eye.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res = result_modified_BPSK(results)
+res = result_modified_BPSK(results, samples_per_symbol)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)
