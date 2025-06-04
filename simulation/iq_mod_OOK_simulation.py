@@ -10,9 +10,11 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from simulation.sim_functions.simulate_mzm import simulate_modulation_mzm, result_modified_OOK
+from simulation.sim_functions.simulate_iqmodulator import simulate_modulation_iqmod
 import numpy as np
 import matplotlib.pyplot as plt
+
+from components.iq_modulator_design import IQModulator
 
 
 ########################################################################################################################
@@ -21,9 +23,9 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-mzm = asp.MZModulator1x1(with_delays=True, delay_at_input=False)
+iq_mod = IQModulator()
 
-lv = mzm.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
+lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 
 lv.visualize(annotate=True)
 
@@ -31,7 +33,7 @@ lv.visualize(annotate=True)
 # Find the operating wavelength so that the modulator is operating at the quadrature biasing point
 ########################################################################################################################
 
-cm = mzm.CircuitModel()
+cm = iq_mod.CircuitModel()
 
 wavelengths = np.linspace(1.55, 1.555, 101)
 S = cm.get_smatrix(wavelengths=wavelengths)
@@ -65,30 +67,49 @@ num_symbols = 2**8
 samples_per_symbol = 2**7
 bit_rate = 50e9
 
-results = simulate_modulation_mzm(
-    cell=mzm,
-    mod_amplitude=rf_vpi / 2 * 0.8,
-    mod_noise=0.01,
+results = simulate_modulation_iqmod(
+    cell=iq_mod,
+    mod_amplitude_i=rf_vpi / 2 * 0.8,
+    mod_noise_i=0.01,
+    mod_amplitude_q=rf_vpi / 2 * 0.8,
+    mod_noise_q=0.01,
     opt_amplitude=1.0,
     opt_noise=0.01,
-    v_mzm1=0.0,  
-    v_mzm2=0.0,
-    bit_rate=bit_rate,
+    v_heater_i=0.1,
+    v_heater_q=0.1,
+    v_mzm_left1=0,
+    v_mzm_left2=0,
+    v_mzm_right1=0,
+    v_mzm_right2=0,
+    # bit_rate=bit_rate,
+    # baud_rate=baud_rate,
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
     center_wavelength=wl,
 )
-outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
+
+# results = simulate_modulation_iqmod(
+#     cell=mzm,
+#     mod_amplitude=rf_vpi / 2 * 0.8,
+#     mod_noise=0.01,
+#     opt_amplitude=1.0,
+#     opt_noise=0.01,
+#     v_mzm1=0.0,
+#     v_mzm2=0.0,
+#     bit_rate=bit_rate,
+#     n_bytes=num_symbols,
+#     steps_per_bit=samples_per_symbol,
+#     center_wavelength=wl,
+# )
+outputs = ["sig_i", "sig_q", "src_in", "out"]
 titles = [
-    "RF signal",
-    "Heater(bottom) electrical input",
-    "Heater(top) electrical input",
+    "RF signal (top)",
+    "RF signal (bottom)",
     "Optical input",
     "Optical output",
 ]
-
-ylabels = ["voltage [V]", "voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
-process = [np.real, np.real, np.real, np.abs, np.abs]
+ylabels = ["voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
+process = [np.real, np.real, np.abs, np.real]
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
     data = pr(results[out][1:])
