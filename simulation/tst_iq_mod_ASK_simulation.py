@@ -8,7 +8,7 @@ electrode_length = 8000
 mzm = asp.MZModulator1x1(with_delays=True, delay_at_input=False)
 
 lv = mzm.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
-lv.visualize(annotate=True)
+#lv.visualize(annotate=True)
 
 # Find the operating wavelength so that the modulator is operating at the quadrature biasing point
 
@@ -30,7 +30,7 @@ plt.xlabel("Wavelength [nm]")
 plt.ylabel("Transmission [au]")
 plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
 plt.ylim(0, 1)
-plt.show()
+#plt.show()
 
 # Simulation of a MZM working in OOK modulation format.
 
@@ -56,17 +56,15 @@ results = simulate_modulation_mzm(
     steps_per_bit=samples_per_symbol,
     center_wavelength=wl,
 )
-outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
+outputs = ["sig", "src_in", "out"]
 titles = [
     "RF signal",
-    "Heater(bottom) electrical input",
-    "Heater(top) electrical input",
-    "Optical input",
     "Optical output",
+    "Optical input",
 ]
 
-ylabels = ["voltage [V]", "voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
-process = [np.real, np.real, np.real, np.abs, np.abs]
+ylabels = ["voltage [V]", "amplitude [au]", "amplitude [au]"]
+process = [np.real, np.abs, np.abs]
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
     data = pr(results[out][1:])

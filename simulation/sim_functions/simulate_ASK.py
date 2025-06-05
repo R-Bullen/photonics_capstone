@@ -62,17 +62,20 @@ def simulate_modulation_mzm(
     """
 
     # Define the excitations with noise on the electrical
-    f_mod = random_bitsource(
+    #f_mod = random_bitsource(
+    f_mod = rand_sq_bitsource(
         bitrate=bit_rate,
         amplitude=mod_amplitude,
         n_bytes=n_bytes,
     )
     rand_normal_dist = rand_normal()
     src_in = i3.FunctionExcitation(
-        port_domain=i3.OpticalDomain, excitation_function=lambda t: opt_amplitude + rand_normal_dist(opt_noise)
+        #port_domain=i3.OpticalDomain, excitation_function=lambda t: opt_amplitude + rand_normal_dist(opt_noise)
+        port_domain=i3.OpticalDomain, excitation_function=lambda t: opt_amplitude
     )
     signal = i3.FunctionExcitation(
-        port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod(t) + rand_normal_dist(mod_noise)
+        #port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod(t) + rand_normal_dist(mod_noise)
+        port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod(t)
     )
     
     mzm1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm1)

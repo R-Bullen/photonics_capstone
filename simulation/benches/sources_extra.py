@@ -129,6 +129,7 @@ def rand_sq_bitsource(bitrate: float, amplitude: float, n_bytes: int = 100, seed
         idx = int(t * bitrate)
         if idx >= n_bytes:
             idx = n_bytes - 1
+
         return amplitude * data[idx]
 
     return f_rbs
