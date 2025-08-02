@@ -6,7 +6,7 @@ import ipkiss3.all as i3
 from components.iq_modulator_design import IQModulator
 #from deprecated.tst_SimFunc import *
 
-from sim_functions.simulate_iqmodulator import simulate_modulation_iqmod
+from sim_functions.simulate_iqmodulator2 import simulate_modulation_iqmod2, result_modified_OOK
 
 mod = IQModulator()
 lv = mod.Layout()
@@ -44,19 +44,21 @@ print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
 cm.bandwidth = 50e9    # Modulator bandwidth (in Hz)
 
-results = simulate_modulation_mzm(
-    cell=mzm,
-    mod_amplitude=rf_vpi / 2 * 0.8,
-    mod_noise=0.01,
+results = simulate_modulation_iqmod2(
+    cell=mod,
+    mod_amplitude_i=rf_vpi / 2 * 0.8,
+    mod_noise_i=0.01,
+    mod_amplitude_q=rf_vpi / 2 * 0.8,
+    mod_noise_q=0.01,
     opt_amplitude=1.0,
     opt_noise=0.01,
-    v_mzm1=0.0,
-    v_mzm2=0.0,
     bit_rate=50e9,
     n_bytes=2**8,
     steps_per_bit=2**7,
     center_wavelength=wl,
+
 )
+'''
 outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
 titles = [
     "RF signal",
@@ -103,7 +105,7 @@ plt.title("Constellation diagram", fontsize=14)
 plt.xlim([-1.0, 1.0])
 plt.ylim([-1.0, 1.0])
 plt.show()
-
+'''
 
 '''
 test = i3.ConnectComponents(
