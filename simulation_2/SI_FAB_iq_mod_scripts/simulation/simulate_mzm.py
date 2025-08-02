@@ -1,0 +1,147 @@
+# Copyright (C) 2020-2024 Luceda Photonics
+
+"""
+Set up a testbench for an MZM.
+"""
+
+import random
+
+import numpy as np
+
+import ipkiss3.all as i3
+from si_fab.benches.sources import random_bitsource, rand_normal
+
+
+def simulate_modulation_mzm(
+    cell,
+    mod_amplitude=None,
+    mod_noise=None,
+    opt_amplitude=None,
+    opt_noise=None,
+    v_mzm1=None,
+    v_mzm2=None,
+    bit_rate=10e9,
+    n_bytes=100,
+    steps_per_bit=50,
+    center_wavelength=1.5,
+    debug=False,
+):
+    """
+    Simulation recipe to simulate an MZ modulator.
+
+    Parameters
+    ----------
+    cell : i3.PCell
+        pcells of the IQ modulator to be simulated.
+    mod_amplitude : float
+        Amplitude of the modulator.
+    mod_noise : float
+        Amplitude of the noise of the modulator signal.
+    opt_amplitude : float
+        Amplitude of the input optical signal.
+    opt_noise : float
+        Amplitude of the noise at the optical input.
+    v_mzm1 : float
+        Voltage on the first heater (left) [V].
+    v_mzm2 : float
+        Voltage on the second heater (left) [V].
+    bit_rate : float
+        Bit rate of the signal.
+    n_bytes : int
+        Number of bytes of the simulation.
+    steps_per_bit : int
+        Number of time steps per bit.
+    center_wavelength : float
+        Center wavelength of the optical carrier.
+    debug : bool
+        If True, the simulation is run in debug mode.
+
+    Returns
+    -------
+    Dictionary of simulated signals.
+
+    """
+
+    # Define the excitations with noise on the electrical
+    f_mod = random_bitsource(
+        bitrate=bit_rate,
+        amplitude=mod_amplitude,
+        n_bytes=n_bytes,
+    )
+    rand_normal_dist = rand_normal()
+    src_in = i3.FunctionExcitation(
+        port_domain=i3.OpticalDomain, excitation_function=lambda t: opt_amplitude + rand_normal_dist(opt_noise)
+    )
+    signal = i3.FunctionExcitation(
+        port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod(t) + rand_normal_dist(mod_noise)
+    )
+    revsignal = i3.FunctionExcitation(
+        port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod(t) - rand_normal_dist(mod_noise)
+    )
+    mzm1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm1)
+    mzm2 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm2)
+    gnd1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+    gnd2 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+    gnd3 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+
+    t0 = 0.0
+    t1 = n_bytes / bit_rate
+    dt = t1 / n_bytes / steps_per_bit
+    # Testbench
+    testbench = i3.ConnectComponents(
+        child_cells={
+            "DUT": cell,
+            "out": i3.Probe(port_domain=i3.OpticalDomain),
+            "src_in": src_in,
+            "sig": signal,
+            "revsig": revsignal,
+            "gnd1": gnd1,
+            "gnd2": gnd2,
+            "gnd3": gnd3,
+            "mzm1": mzm1,
+            "mzm2": mzm2,
+        },
+        links=[
+            ("src_in:out", "DUT:in"),
+            ("DUT:out", "out:in"),
+            ("DUT:ele1", "mzm1:out"),
+            ("DUT:ele2", "mzm2:out"),
+            ("DUT:SR_pad", "sig:out"),
+            ("DUT:SL_pad", "revsig:out"),
+            ("DUT:G1_pad", "gnd1:out"),
+            ("DUT:G2_pad", "gnd2:out"),
+            ("DUT:G3_pad", "gnd3:out"),
+        ],
+    )
+
+    testbench_model = testbench.CircuitModel()
+    results = testbench_model.get_time_response(
+        t0=t0,
+        t1=t1,
+        dt=dt,
+        center_wavelength=center_wavelength,
+        debug=debug,
+    )
+    return results
+
+
+def result_modified_BPSK(result):
+    results_rotation = []
+    res_sample = random.sample(list(result["out"]), 200)
+    for res in res_sample:
+        if np.angle(res) > 0 and np.angle(res) < np.pi / 2:
+            results_rotation.append(res * np.exp(-1j * np.angle(res)))
+        elif np.angle(res) > np.pi / 2 and np.angle(res) < np.pi:
+            results_rotation.append(res * np.exp(-1j * (np.angle(res) - np.pi)))
+        elif np.angle(res) > -np.pi and np.angle(res) < -np.pi / 2:
+            results_rotation.append(res * np.exp(-1j * (np.angle(res) - np.pi)))
+        elif np.angle(res) > -np.pi / 2 and np.angle(res) < 0:
+            results_rotation.append(res * np.exp(-1j * np.angle(res)))
+
+    return results_rotation
+
+
+def result_modified_OOK(result):
+    res_sample = random.sample(list(result["out"]), 200)
+
+    return [res * np.exp(-1j * np.angle(res)) for res in res_sample]
