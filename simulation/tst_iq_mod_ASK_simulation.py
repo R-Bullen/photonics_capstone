@@ -42,10 +42,10 @@ cm.bandwidth = 25e9    # Modulator bandwidth (in Hz)
 num_symbols = 2**8
 samples_per_symbol = 2**7
 bit_rate = 50e9
-
+print("mod_amplitude=" + str(rf_vpi / 2 * 0.8))
 results = simulate_modulation_mzm(
     cell=mzm,
-    mod_amplitude=rf_vpi / 2 * 0.8,
+    mod_amplitude=rf_vpi / 2,
     mod_noise=0.01,
     opt_amplitude=1.0,
     opt_noise=0.01,
