@@ -10,7 +10,10 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from simulation.simulate_mzm import simulate_modulation_PAM4, result_modified_OOK
+
+from components.iq_modulator_design import IQModulator
+from simulation.simulate_iq_modulator import simulate_modulation_iq_mod, result_modified_OOK
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -21,9 +24,9 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-mzm = asp.MZModulator1x1(with_delays=True, delay_at_input=False)
+iq_mod = IQModulator(with_delays=True, delay_at_input=True)
 
-lv = mzm.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
+lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 
 lv.visualize(annotate=True)
 
@@ -31,7 +34,7 @@ lv.visualize(annotate=True)
 # Find the operating wavelength so that the modulator is operating at the quadrature biasing point
 ########################################################################################################################
 
-cm = mzm.CircuitModel()
+cm = iq_mod.CircuitModel()
 
 wavelengths = np.linspace(1.55, 1.555, 101)
 S = cm.get_smatrix(wavelengths=wavelengths)
@@ -56,27 +59,35 @@ plt.show()
 ########################################################################################################################
 
 # Define modulator characteristics
+# Voltage needed for a pi phase shift and half pi shift
 rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
+V_half_pi = rf_vpi / 2
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
 cm.bandwidth = 25e9    # Modulator bandwidth (in Hz)
 
 num_symbols = 2**8
 samples_per_symbol = 2**7
-baud_rate = 50e9
+bit_rate = 50e9
 
-results = simulate_modulation_PAM4(
-    cell=mzm,
-    mod_amplitude=rf_vpi / 2 * 0.5,
-    mod_noise=0.01,
-    opt_amplitude=1.0,
+results = simulate_modulation_iq_mod(
+    cell=iq_mod,
+    mod_amplitude_i=3.0,
+    mod_noise_i=0.5,
+    mod_amplitude_q=3.0,
+    mod_noise_q=0.5,
+    opt_amplitude=2.0,
     opt_noise=0.01,
-    v_mzm1=0.0,  
-    v_mzm2=0.0,
-    symbol_rate=baud_rate,
-    n_bytes=num_symbols,
-    steps_per_symbol=samples_per_symbol,
-    center_wavelength=wl,
+    v_heater_i=V_half_pi,  # The half pi phase shift implements orthogonal modulation
+    v_heater_q=0.0,
+    v_mzm_left1=V_half_pi,  # MZM (left) works at its Maximum transmission points
+    v_mzm_left2=0.0,
+    v_mzm_right1=V_half_pi,  # MZM (right) works at its Maximum transmission points
+    v_mzm_right2=0.0,
+    bit_rate=50e9,
+    n_bytes=2 ** 8,
+    steps_per_bit=2 ** 7,
+    center_wavelength=1.55,
 )
 outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
 titles = [
@@ -103,8 +114,8 @@ plt.tight_layout()
 ########################################################################################################################
 
 data_stream = np.abs(results["out"]) ** 2
-time_step = 1.0 / (baud_rate * samples_per_symbol)
-eye = i3.EyeDiagram(data_stream, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
+time_step = 1.0 / (bit_rate * samples_per_symbol)
+eye = i3.EyeDiagram(data_stream, bit_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
 eye.visualize(show=False)
 
 ########################################################################################################################
@@ -112,7 +123,7 @@ eye.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res = result_modified_OOK(results, samples_per_symbol, sampling_point=0.8)
+res = result_modified_OOK(results, samples_per_symbol )
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)
