@@ -26,9 +26,9 @@ import matplotlib.pyplot as plt
 electrode_length = 8000
 iq_mod = IQModulator(with_delays=True, delay_at_input=True)
 
-lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
-
-lv.visualize(annotate=True)
+# lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
+#
+# lv.visualize(annotate=True)
 
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the quadrature biasing point
@@ -44,15 +44,15 @@ idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
 wl = wavelengths[int((idx_min + idx_max) / 2)]
 print("Quadrature wavelength: {}".format(wl))
 
-plt.figure()
-plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
-plt.plot([wl*1e3, wl*1e3], [0, 1])
-plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
-plt.xlabel("Wavelength [nm]")
-plt.ylabel("Transmission [au]")
-plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
-plt.ylim(0, 1)
-plt.show()
+# plt.figure()
+# plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
+# plt.plot([wl*1e3, wl*1e3], [0, 1])
+# plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
+# plt.xlabel("Wavelength [nm]")
+# plt.ylabel("Transmission [au]")
+# plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
+# plt.ylim(0, 1)
+# plt.show()
 
 ########################################################################################################################
 # Simulation of a MZM working in OOK modulation format.
@@ -73,11 +73,11 @@ bit_rate = 50e9
 results = simulate_modulation_iq_mod(
     cell=iq_mod,
     mod_amplitude_i=3.0,
-    mod_noise_i=0.5,
-    mod_amplitude_q=3.0,
-    mod_noise_q=0.5,
-    opt_amplitude=2.0,
-    opt_noise=0.01,
+    mod_noise_i=0.0,
+    mod_amplitude_q=0.0,
+    mod_noise_q=0.0,
+    opt_amplitude=1.0,
+    opt_noise=0.0,
     v_heater_i=V_half_pi,  # The half pi phase shift implements orthogonal modulation
     v_heater_q=0.0,
     v_mzm_left1=V_half_pi,  # MZM (left) works at its Maximum transmission points
@@ -85,21 +85,31 @@ results = simulate_modulation_iq_mod(
     v_mzm_right1=V_half_pi,  # MZM (right) works at its Maximum transmission points
     v_mzm_right2=0.0,
     bit_rate=50e9,
-    n_bytes=2 ** 8,
+    n_bytes=2 ** 6,
     steps_per_bit=2 ** 7,
     center_wavelength=1.55,
 )
-outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
+# outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
+# titles = [
+#     "RF signal",
+#     "Heater(bottom) electrical input",
+#     "Heater(top) electrical input",
+#     "Optical input",
+#     "Optical output",
+# ]
+#
+# ylabels = ["voltage [V]", "voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
+# process = [np.real, np.real, np.real, np.abs, np.abs]
+outputs = ["sig_i", "sig_q", "src_in", "out"]
 titles = [
-    "RF signal",
-    "Heater(bottom) electrical input",
-    "Heater(top) electrical input",
+    "RF signal (top)",
+    "RF signal (bottom)",
     "Optical input",
     "Optical output",
 ]
+ylabels = ["voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
+process = [np.real, np.real, np.abs, np.real]
 
-ylabels = ["voltage [V]", "voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
-process = [np.real, np.real, np.real, np.abs, np.abs]
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
     data = pr(results[out][1:])
