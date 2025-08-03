@@ -98,15 +98,15 @@ def simulate_modulation_iq_mod(
     signal_i = i3.FunctionExcitation(
         port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_i(t) + rand_normal_dist(mod_noise_i)
     )
-    revsignal_i = i3.FunctionExcitation(
-        port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_i(t) - rand_normal_dist(mod_noise_i)
-    )
+    # revsignal_i = i3.FunctionExcitation(
+    #     port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_i(t) - rand_normal_dist(mod_noise_i)
+    # )
     signal_q = i3.FunctionExcitation(
         port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_q(t) + rand_normal_dist(mod_noise_q)
     )
-    revsignal_q = i3.FunctionExcitation(
-        port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_q(t) - rand_normal_dist(mod_noise_q)
-    )
+    # revsignal_q = i3.FunctionExcitation(
+    #     port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_q(t) - rand_normal_dist(mod_noise_q)
+    # )
     heater_i = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_i)
     heater_q = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_q)
     mzm_left1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_left1)
@@ -163,9 +163,9 @@ def simulate_modulation_iq_mod(
             "out": i3.Probe(port_domain=i3.OpticalDomain),
             "src_in": src_in,
             "sig_i": signal_i,
-            "revsig_i": revsignal_i,
+            # "revsig_i": revsignal_i,
             "sig_q": signal_q,
-            "revsig_q": revsignal_q,
+            # "revsig_q": revsignal_q,
             "gnd1": gnd1,
             "gnd2": gnd2,
             "gnd3": gnd3,
@@ -180,24 +180,24 @@ def simulate_modulation_iq_mod(
             "mzm_right2": mzm_right2,
         },
         links=[
-            ("src_in:out", "DUT:in"),#
-            ("DUT:out", "out:in"),#
-            ("DUT:hti0", "ht_i:out"),
-            ("DUT:hti1", "ht_q:out"),
-            ("DUT:mzmi0", "mzm_left1:out"),
-            ("DUT:mzmo0", "mzm_left2:out"),
-            ("DUT:mzmi1", "mzm_right1:out"),
-            ("DUT:mzmo1", "mzm_right2:out"),
-            ("DUT:mzmsl0", "sig_i:out"),
-            ("DUT:mzmsr0", "revsig_i:out"),
-            ("DUT:mzmsl1", "sig_q:out"),
-            ("DUT:mzmsr1", "revsig_q:out"),
-            ("DUT:mzmg10", "gnd1:out"),
-            ("DUT:mzmg20", "gnd2:out"),
-            ("DUT:mzmg30", "gnd3:out"),
-            ("DUT:mzmg11", "gnd4:out"),
-            ("DUT:mzmg21", "gnd5:out"),
-            ("DUT:mzmg31", "gnd6:out"),
+            ("src_in:out", "DUT:in"), # input
+            ("DUT:out", "out:in"), # output
+            # ("DUT:hti0", "ht_i:out"), # top heater input
+            ("DUT:in2_m2_1", "ht_i:out"), # bottom heater input
+            ("DUT:out_m2_1", "ht_q:out"), # bottom heater input (output)
+            # ("DUT:top_mzm_input", "mzm_left1:out"), # mzm input 0
+            # ("DUT:top_mzm_output", "mzm_left2:out"), # mzm output 0
+            # ("DUT:bottom_mzm_input", "mzm_right1:out"), # mzm input 1
+            # ("DUT:bottom_mzm_output", "mzm_right2:out"), # mzm output 1
+            ("DUT:top_signal", "sig_i:out"), # i signal (top)
+            # ("DUT:middle_signal", "revsig_i:out"), # reverse i signal
+            ("DUT:bottom_signal", "sig_q:out"), # q signal (bottom)
+            # ("DUT:middle_ground", "revsig_q:out"), # reverse q signal
+            ("DUT:in2_m2_2", "gnd1:out"), # bottom heater ground
+            ("DUT:out_m2_2", "gnd2:out"),
+            ("DUT:top_ground", "gnd3:out"),
+            ("DUT:middle_ground", "gnd4:out"),
+            ("DUT:bottom_ground", "gnd6:out"),
         ],
         # links=[
         #     ("src_in:out", "DUT:sp0"),
