@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=True, delay_at_input=True)
+iq_mod = IQModulator(with_delays=False, delay_at_input=True)
 
 # lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 #
@@ -72,17 +72,17 @@ bit_rate = 50e9
 
 results = simulate_modulation_iq_mod(
     cell=iq_mod,
-    mod_amplitude_i=0.0,
+    mod_amplitude_i=4*V_half_pi,
     mod_noise_i=0.0,
-    mod_amplitude_q=3.0,
+    mod_amplitude_q=3*V_half_pi,
     mod_noise_q=0.0,
     opt_amplitude=1.0,
     opt_noise=0.0,
-    v_heater_i=V_half_pi,  # The half pi phase shift implements orthogonal modulation
+    v_heater_i=0.0,  # The half pi phase shift implements orthogonal modulation
     v_heater_q=0.0,
-    v_mzm_left1=V_half_pi,  # MZM (left) works at its Maximum transmission points
+    v_mzm_left1=0.0,  # MZM (left) works at its Maximum transmission points
     v_mzm_left2=0.0,
-    v_mzm_right1=V_half_pi,  # MZM (right) works at its Maximum transmission points
+    v_mzm_right1=0.0,  # MZM (right) works at its Maximum transmission points
     v_mzm_right2=0.0,
     bit_rate=50e9,
     n_bytes=2 ** 6,
@@ -100,15 +100,17 @@ results = simulate_modulation_iq_mod(
 #
 # ylabels = ["voltage [V]", "voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
 # process = [np.real, np.real, np.real, np.abs, np.abs]
-outputs = ["sig_i", "sig_q", "src_in", "out"]
+outputs = ["sig_i", "sig_q", "src_in", "out"] #, "top_out", "bottom_out"]
 titles = [
     "RF signal (top)",
     "RF signal (bottom)",
     "Optical input",
     "Optical output",
+    # "Optical output (top)",
+    # "Optical output (bottom)",
 ]
-ylabels = ["voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
-process = [np.real, np.real, np.abs, np.real]
+ylabels = ["voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"] #, "amplitude [au]", "amplitude [au]"]
+process = [np.real, np.real, np.abs, np.real] #, np.real, np.real]
 
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
