@@ -22,6 +22,7 @@ def simulate_modulation_iq_mod(
         opt_noise=None,
         v_heater_i=None,
         v_heater_q=None,
+        v_heater_out=None,
         v_mzm_left1=None,
         v_mzm_left2=None,
         v_mzm_right1=None,
@@ -109,6 +110,7 @@ def simulate_modulation_iq_mod(
     # )
     heater_i = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_i)
     heater_q = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_q)
+    heater_out = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_out)
     mzm_left1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_left1)
     mzm_left2 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_left2)
     mzm_right1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_right1)
@@ -119,6 +121,7 @@ def simulate_modulation_iq_mod(
     gnd4 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
     gnd5 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
     gnd6 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+    gnd7 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
 
     t0 = 0.0
     t1 = n_bytes / bit_rate
@@ -143,8 +146,10 @@ def simulate_modulation_iq_mod(
             "gnd4": gnd4,
             "gnd5": gnd5,
             "gnd6": gnd6,
+            "gnd7": gnd7,
             "ht_i": heater_i,
             "ht_q": heater_q,
+            "ht_out": heater_out,
         },
         links=[
             ("src_in:out", "DUT:in"), # input
@@ -153,6 +158,9 @@ def simulate_modulation_iq_mod(
             # ("DUT:bottom_out", "bottom_out:in"), # output
             ("DUT:mzm_1_ps_1_in", "ht_i:out"), # bottom heater input
             ("DUT:mzm_2_ps_2_in", "ht_q:out"), # bottom heater input (output)
+            ("DUT:mzm_2_ps_out_in", "ht_out:out"), # bottom heater input (output)
+            ("DUT:mzm_2_ps_out_gnd", "gnd7:out"), # bottom heater input (output)
+
             ("DUT:top_signal", "sig_i:out"), # i signal (top)
             ("DUT:bottom_signal", "sig_q:out"), # q signal (bottom)
             # ("DUT:middle_ground", "revsig_q:out"), # reverse q signal
@@ -317,3 +325,9 @@ def result_modified_OOK(result, samples_per_symbol, sampling_point=0.5):
                  int(samples_per_symbol * (10 + sampling_point))::samples_per_symbol]  # Ignore the first 10 symbols
 
     return [res * np.exp(-1j * np.angle(res)) for res in res_sample]
+
+def result_modified_16QAM(result):
+    res_sample = random.sample(list(result["out"]), 1000)
+    angle_sample = np.mean(np.angle(res_sample))
+
+    return [res * np.exp(-1j * angle_sample) for res in res_sample]

@@ -10,9 +10,8 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-
-from components.iq_modulator_design import IQModulator
-from simulation.simulate_iq_modulator import simulate_modulation_iq_mod, result_modified_OOK
+from custom_components.iq_modulator_design import IQModulator
+from simulation.simulate_iq_modulator import simulate_modulation_iq_mod, result_modified_OOK, result_modified_16QAM
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,7 +25,7 @@ import matplotlib.pyplot as plt
 electrode_length = 8000
 iq_mod = IQModulator(with_delays=False, delay_at_input=True)
 
-# lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
+lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 #
 # lv.visualize(annotate=True)
 
@@ -64,26 +63,26 @@ rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; D
 V_half_pi = rf_vpi / 2
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
-cm.bandwidth = 25e9    # Modulator bandwidth (in Hz)
+ps_vpi = 0.1 / (200/10000)
+print("PS Vpi = %f" % ps_vpi)
 
-num_symbols = 2**8
+cm.bandwidth = 100e9    # Modulator bandwidth (in Hz)
+
+num_symbols = 2**7
 samples_per_symbol = 2**7
 bit_rate = 50e9
 
 results = simulate_modulation_iq_mod(
     cell=iq_mod,
-    mod_amplitude_i=4*V_half_pi,
+    mod_amplitude_i=V_half_pi*0.8,
     mod_noise_i=0.0,
-    mod_amplitude_q=3*V_half_pi,
+    mod_amplitude_q=V_half_pi*0.8, # 3*V_half_pi,
     mod_noise_q=0.0,
     opt_amplitude=1.0,
     opt_noise=0.0,
-    v_heater_i=0.0,  # The half pi phase shift implements orthogonal modulation
-    v_heater_q=0.0,
-    v_mzm_left1=0.0,  # MZM (left) works at its Maximum transmission points
-    v_mzm_left2=0.0,
-    v_mzm_right1=0.0,  # MZM (right) works at its Maximum transmission points
-    v_mzm_right2=0.0,
+    v_heater_i=ps_vpi*3/2,  # The half pi phase shift implements orthogonal modulation
+    v_heater_q=ps_vpi*3/2,
+    v_heater_out=ps_vpi,
     bit_rate=50e9,
     n_bytes=2 ** 6,
     steps_per_bit=2 ** 7,
@@ -135,7 +134,7 @@ eye.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res = result_modified_OOK(results, samples_per_symbol )
+res = result_modified_16QAM(results )
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)

@@ -12,10 +12,10 @@ This script generates several outputs:
 import numpy as np
 import matplotlib.pyplot as plt
 
-# import si_fab.all as pdk
+import si_fab.all as pdk
 from ipkiss3 import all as i3
-from custom_components.iq_modulator_design import IQModulator
-# from pteam_library_si_fab.components.mzm.pcell.cell import MZModulator
+from iqmodulator_designs import IQModulator
+from pteam_library_si_fab.components.mzm.pcell.cell import MZModulator
 from simulation.simulate_QAM import simulate_modulation_QAM, result_modified_16QAM
 
 ########################################################################################################################
@@ -23,69 +23,46 @@ from simulation.simulate_QAM import simulate_modulation_QAM, result_modified_16Q
 ########################################################################################################################
 
 # Phase Shifter
-# ps = pdk.PhaseShifterWaveguide(
-#     name="phaseshifter",
-#     length=1000.0,
-#     core_width=0.45,
-#     rib_width=7.8,
-#     junction_offset=-0.1,
-#     p_width=4.1,
-#     n_width=3.9,
-# )
-# vpi_lpi = 1.2  # V.cm
-# cl = 1.1e-16  # F/um
-# res = 25  # Ohm
-# tau = ps.length * cl * res  # Time constant associated with the modulator
-# ps.CircuitModel(vpi_lpi=vpi_lpi, tau=tau)
+ps = pdk.PhaseShifterWaveguide(
+    name="phaseshifter",
+    length=1000.0,
+    core_width=0.45,
+    rib_width=7.8,
+    junction_offset=-0.1,
+    p_width=4.1,
+    n_width=3.9,
+)
+vpi_lpi = 1.2  # V.cm
+cl = 1.1e-16  # F/um
+res = 25  # Ohm
+tau = ps.length * cl * res  # Time constant associated with the modulator
+ps.CircuitModel(vpi_lpi=vpi_lpi, tau=tau)
 
 # heater
-# heater_length = 100
-# heater = pdk.HeatedWaveguide(name="heater")
-# heater.Layout(shape=[(0.0, 0.0), (heater_length, 0.0)])
-# heater_width = heater.heater_width * 2
-# p_pi_sq = heater.CircuitModel().p_pi_sq  # Power needed for a pi phase shift on a square [W]
-# V_half_pi = np.sqrt(
-#     np.pi / 2 * p_pi_sq * heater_length / (np.pi * heater_width)
-# )  # Voltage needed for a half pi phase shift
-# V_pi = np.sqrt(np.pi * p_pi_sq * heater_length / (np.pi * heater_width))  # Voltage needed for a pi phase shift
+heater_length = 100
+heater = pdk.HeatedWaveguide(name="heater")
+heater.Layout(shape=[(0.0, 0.0), (heater_length, 0.0)])
+heater_width = heater.heater_width * 2
+p_pi_sq = heater.CircuitModel().p_pi_sq  # Power needed for a pi phase shift on a square [W]
+V_half_pi = np.sqrt(
+    np.pi / 2 * p_pi_sq * heater_length / (np.pi * heater_width)
+)  # Voltage needed for a half pi phase shift
+V_pi = np.sqrt(np.pi * p_pi_sq * heater_length / (np.pi * heater_width))  # Voltage needed for a pi phase shift
 
 # MZModulator
-# mzm = MZModulator(
-#     phaseshifter=ps,
-#     heater=heater,
-#     rf_pad_width=75,
-#     rf_pad_length=100,
-#     rf_signal_width=5.0,
-#     rf_ground_width=20.0,
-#     rf_pitch_in=200,
-# )
+mzm = MZModulator(
+    phaseshifter=ps,
+    heater=heater,
+    rf_pad_width=75,
+    rf_pad_length=100,
+    rf_signal_width=5.0,
+    rf_ground_width=20.0,
+    rf_pitch_in=200,
+)
 
 # IQ Modulator
-# IQ_mod = IQModulator()
-electrode_length = 8000
-IQ_mod = IQModulator(with_delays=False, delay_at_input=True)
-
-lv = IQ_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
-
+IQ_mod = IQModulator(mzm=mzm)
 IQ_mod.Layout().visualize(show=False)
-
-cm = IQ_mod.CircuitModel()
-
-wavelengths = np.linspace(1.55, 1.555, 101)
-S = cm.get_smatrix(wavelengths=wavelengths)
-
-idx_min = np.argmin(np.abs(np.abs(S['out', 'in'])**2))
-idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
-wl = wavelengths[int((idx_min + idx_max) / 2)]
-print("Quadrature wavelength: {}".format(wl))
-
-# Voltage needed for a pi phase shift and half pi shift
-rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
-V_half_pi = rf_vpi / 2
-print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
-
-ps_vpi = 0.1 / (200/10000)
-print("PS Vpi = %f" % ps_vpi)
 
 ########################################################################################################################
 # Simulation of a IQ modulator working in 16QAM modulation format.
@@ -112,11 +89,12 @@ results = simulate_modulation_QAM(
 )
 
 outputs = ["sig_i", "revsig_i", "sig_q", "revsig_q", "ht_i", "ht_q", "src_in", "out"]
+outputs = ["sig_i", "sig_q", "ht_i", "ht_q", "src_in", "out"]
 titles = [
     "RF signal_i",
-    "RF reversed signal_i",
+    # "RF reversed signal_i",
     "RF signal_q",
-    "RF reversed signal_q",
+    # "RF reversed signal_q",
     "Heater(left) electrical input",
     "Heater(right) electrical input",
     "Optical input",
@@ -133,6 +111,7 @@ ylabels = [
     "power [W]",
 ]
 process = [np.real, np.real, np.real, np.real, np.real, np.real, np.abs, np.abs]
+process = [np.real, np.real, np.real, np.real, np.abs, np.abs]
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):

@@ -21,11 +21,11 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-mzm = asp.MZModulator1x1(with_delays=True, delay_at_input=False)
+mzm = asp.MZModulator1x1(with_delays=False, delay_at_input=False)
 
 lv = mzm.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 
-lv.visualize(annotate=True)
+# lv.visualize(annotate=True)
 
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the quadrature biasing point
@@ -59,19 +59,33 @@ plt.show()
 rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
-cm.bandwidth = 25e9    # Modulator bandwidth (in Hz)
+# vpi_l = i3.PositiveNumberProperty(default=0.1, doc="VpiL product of the phase shifter in V*cm")
 
-num_symbols = 2**8
+# heater_length = i3.PositiveNumberProperty(default=200)
+
+# def _default_waveguide_length(self):
+#   return self.heater_length + 2.0 * self.wire_width + 20
+
+# wire_width = i3.PositiveNumberProperty(default=20, doc="width of the conductor wire")
+
+# ps_vpi = ps_cm.vpi_l / (ps_cm.heater_length / 10000)     # VpiL unit is V.cm
+# waveguide_length = 200 + 2 * 20 + 20 = 260
+ps_vpi = 0.1 / (200/10000)
+print("PS Vpi = %f" % ps_vpi)
+
+cm.bandwidth = 50e9    # Modulator bandwidth (in Hz)
+
+num_symbols = 2**6
 samples_per_symbol = 2**7
 bit_rate = 50e9
 
 results = simulate_modulation_mzm(
     cell=mzm,
-    mod_amplitude=rf_vpi / 2 * 0.8,
+    mod_amplitude=rf_vpi / 2, # * 0.8,
     mod_noise=0.01,
     opt_amplitude=1.0,
     opt_noise=0.01,
-    v_mzm1=0.0,  
+    v_mzm1=ps_vpi/2,
     v_mzm2=0.0,
     bit_rate=bit_rate,
     n_bytes=num_symbols,
