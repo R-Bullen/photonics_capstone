@@ -26,8 +26,7 @@ electrode_length = 8000
 iq_mod = IQModulator(with_delays=False, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
-#
-# lv.visualize(annotate=True)
+#lv.visualize(annotate=True)
 
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the quadrature biasing point
@@ -43,15 +42,15 @@ idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
 wl = wavelengths[int((idx_min + idx_max) / 2)]
 print("Quadrature wavelength: {}".format(wl))
 
-# plt.figure()
-# plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
-# plt.plot([wl*1e3, wl*1e3], [0, 1])
-# plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
-# plt.xlabel("Wavelength [nm]")
-# plt.ylabel("Transmission [au]")
-# plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
-# plt.ylim(0, 1)
-# plt.show()
+plt.figure()
+plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
+plt.plot([wl*1e3, wl*1e3], [0, 1])
+plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
+plt.xlabel("Wavelength [nm]")
+plt.ylabel("Transmission [au]")
+plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
+plt.ylim(0, 1)
+plt.show()
 
 ########################################################################################################################
 # Simulation of a MZM working in OOK modulation format.
@@ -59,6 +58,7 @@ print("Quadrature wavelength: {}".format(wl))
 
 # Define modulator characteristics
 # Voltage needed for a pi phase shift and half pi shift
+print("cm.vpi_l=%f" % cm.vpi_l)
 rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
 V_half_pi = rf_vpi / 2
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
