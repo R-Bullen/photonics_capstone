@@ -331,3 +331,18 @@ def result_modified_16QAM(result):
     angle_sample = np.mean(np.angle(res_sample))
 
     return [res * np.exp(-1j * angle_sample) for res in res_sample]
+
+def result_modified_QPSK(result):
+    results_rotation = []
+    res_sample = random.sample(list(result["out"]), 200)
+    for res in res_sample:
+        if np.angle(res) > 0 and np.angle(res) < np.pi / 2:
+            results_rotation.append(res * np.exp(1j * (np.pi / 4 - np.angle(res))))
+        elif np.angle(res) > np.pi / 2 and np.angle(res) < np.pi:
+            results_rotation.append(res * np.exp(1j * (np.pi * 3 / 4 - np.angle(res))))
+        elif np.angle(res) > -np.pi and np.angle(res) < -np.pi / 2:
+            results_rotation.append(res * np.exp(1j * (np.pi * 5 / 4 - np.angle(res))))
+        elif np.angle(res) > -np.pi / 2 and np.angle(res) < 0:
+            results_rotation.append(res * np.exp(1j * (-np.pi / 4 - np.angle(res))))
+
+    return results_rotation

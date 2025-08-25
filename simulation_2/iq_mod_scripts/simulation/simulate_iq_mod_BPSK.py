@@ -12,7 +12,7 @@ import ipkiss3.all as i3
 from si_fab.benches.sources import random_bitsource, rand_normal
 
 
-def simulate_modulation_QAM(
+def simulate_modulation_QPSK(
     cell,
     mod_amplitude_i=None,
     mod_noise_i=None,
@@ -149,6 +149,9 @@ def simulate_modulation_QAM(
             "gnd4": gnd4,
             "gnd5": gnd5,
             "gnd6": gnd6,
+            "gnd7": gnd6,
+            "gnd8": gnd6,
+            "gnd9": gnd6,
             "ht_i": heater_i,
             "ht_q": heater_q,
             "mzm_left1": mzm_left1,
@@ -157,24 +160,25 @@ def simulate_modulation_QAM(
             "mzm_right2": mzm_right2,
         },
         links=[
-            ("src_in:out", "DUT:sp0"),
-            ("DUT:sp1", "out:in"),
-            ("DUT:hti0", "ht_i:out"),
-            ("DUT:hti1", "ht_q:out"),
-            ("DUT:mzmi0", "mzm_left1:out"),
-            ("DUT:mzmo0", "mzm_left2:out"),
-            ("DUT:mzmi1", "mzm_right1:out"),
-            ("DUT:mzmo1", "mzm_right2:out"),
-            ("DUT:mzmsl0", "sig_i:out"),
-            ("DUT:mzmsr0", "revsig_i:out"),
-            ("DUT:mzmsl1", "sig_q:out"),
-            ("DUT:mzmsr1", "revsig_q:out"),
-            ("DUT:mzmg10", "gnd1:out"),
-            ("DUT:mzmg20", "gnd2:out"),
-            ("DUT:mzmg30", "gnd3:out"),
-            ("DUT:mzmg11", "gnd4:out"),
-            ("DUT:mzmg21", "gnd5:out"),
-            ("DUT:mzmg31", "gnd6:out"),
+            ("src_in:out", "DUT:in"),
+            ("DUT:out", "out:in"),
+            ("DUT:mzm_1_ps_out_in", "ht_i:out"),
+            ("DUT:mzm_2_ps_out_in", "ht_q:out"),
+            ("DUT:mzm_1_ps_1_in", "mzm_left1:out"),
+            ("DUT:mzm_1_ps_2_in", "mzm_left2:out"),
+            ("DUT:mzm_2_ps_1_in", "mzm_right1:out"),
+            ("DUT:mzm_2_ps_2_in", "mzm_right2:out"),
+            ("DUT:top_signal", "sig_i:out"),
+            ("DUT:bottom_signal", "sig_q:out"),
+            ("DUT:mzm_1_ps_out_gnd", "gnd1:out"),
+            ("DUT:mzm_2_ps_out_gnd", "gnd2:out"),
+            ("DUT:mzm_1_ps_1_gnd", "gnd3:out"),
+            ("DUT:mzm_1_ps_2_gnd", "gnd4:out"),
+            ("DUT:mzm_2_ps_1_gnd", "gnd5:out"),
+            ("DUT:mzm_2_ps_2_gnd", "gnd6:out"),
+            ("DUT:top_ground", "gnd7:out"),
+            ("DUT:middle_ground", "gnd8:out"),
+            ("DUT:bottom_ground", "gnd9:out"),
         ],
     )
 
@@ -194,3 +198,18 @@ def result_modified_16QAM(result):
     angle_sample = np.mean(np.angle(res_sample))
 
     return [res * np.exp(-1j * angle_sample) for res in res_sample]
+
+def result_modified_QPSK(result):
+    results_rotation = []
+    res_sample = random.sample(list(result["out"]), 200)
+    for res in res_sample:
+        if np.angle(res) > 0 and np.angle(res) < np.pi / 2:
+            results_rotation.append(res * np.exp(1j * (np.pi / 4 - np.angle(res))))
+        elif np.angle(res) > np.pi / 2 and np.angle(res) < np.pi:
+            results_rotation.append(res * np.exp(1j * (np.pi * 3 / 4 - np.angle(res))))
+        elif np.angle(res) > -np.pi and np.angle(res) < -np.pi / 2:
+            results_rotation.append(res * np.exp(1j * (np.pi * 5 / 4 - np.angle(res))))
+        elif np.angle(res) > -np.pi / 2 and np.angle(res) < 0:
+            results_rotation.append(res * np.exp(1j * (-np.pi / 4 - np.angle(res))))
+
+    return results_rotation
