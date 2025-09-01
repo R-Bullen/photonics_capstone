@@ -80,8 +80,8 @@ results = simulate_modulation_QPSK(
     mod_noise_q=0.0,
     opt_amplitude=2.0,
     opt_noise=0.0,
-    v_heater_i=0,
-    v_heater_q=ps_vpi/2, # The half pi phase shift implements orthogonal modulation
+    v_heater_i=ps_vpi/2,
+    v_heater_q=0, # The half pi phase shift implements orthogonal modulation
     v_mzm_left1=ps_vpi/2,  # MZM (left) works at its Maximum transmission points
     v_mzm_left2=0.0,
     v_mzm_right1=ps_vpi/2,  # MZM (right) works at its Maximum transmission points
@@ -133,6 +133,6 @@ plt.grid()
 plt.xlabel("real", fontsize=14)
 plt.ylabel("imag", fontsize=14)
 plt.title("Constellation diagram", fontsize=14)
-plt.xlim([-1.0, 1.0])
-plt.ylim([-1.0, 1.0])
+# plt.xlim([-1.0, 1.0])
+# plt.ylim([-1.0, 1.0])
 plt.show()
