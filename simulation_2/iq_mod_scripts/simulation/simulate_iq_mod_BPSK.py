@@ -129,6 +129,9 @@ def simulate_modulation_BPSK(
     gnd4 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
     gnd5 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
     gnd6 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+    gnd7 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+    gnd8 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+    gnd9 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
 
     t0 = 0.0
     t1 = n_bytes / bit_rate
@@ -137,8 +140,7 @@ def simulate_modulation_BPSK(
     testbench = i3.ConnectComponents(
         child_cells={
             "DUT": cell,
-            "top_out": i3.Probe(port_domain=i3.OpticalDomain),
-            "bottom_out": i3.Probe(port_domain=i3.OpticalDomain),
+            "out": i3.Probe(port_domain=i3.OpticalDomain),
             "src_in": src_in,
             "sig_i": signal_i,
             # "revsig_i": revsignal_i,
@@ -150,9 +152,9 @@ def simulate_modulation_BPSK(
             "gnd4": gnd4,
             "gnd5": gnd5,
             "gnd6": gnd6,
-            "gnd7": gnd6,
-            "gnd8": gnd6,
-            "gnd9": gnd6,
+            "gnd7": gnd7,
+            "gnd8": gnd8,
+            "gnd9": gnd9,
             "ht_i": heater_i,
             "ht_q": heater_q,
             "mzm_left1": mzm_left1,
@@ -162,8 +164,7 @@ def simulate_modulation_BPSK(
         },
         links=[
             ("src_in:out", "DUT:in"),
-            ("DUT:top_out", "top_out:in"),
-            ("DUT:bottom_out", "bottom_out:in"),
+            ("DUT:out", "out:in"),
             ("DUT:mzm_1_ps_out_in", "ht_i:out"),
             ("DUT:mzm_2_ps_out_in", "ht_q:out"),
             ("DUT:mzm_1_ps_1_in", "mzm_left1:out"),
