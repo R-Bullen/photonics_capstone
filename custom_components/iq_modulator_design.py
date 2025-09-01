@@ -97,14 +97,14 @@ class CustomPushPullModulatorModel(CompactModel):
         S['top_in', 'top_out'] = S['top_out', 'top_in'] = np.exp(1j * phase) * loss
 
         phase = 2.0 * np.pi / env.wavelength * (
+                neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage_top * parameters.electrode_length)
+        loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
+        S['bottom_in', 'bottom_out'] = S['bottom_out', 'bottom_in'] = np.exp(1j * phase) * loss
+
+        phase = 2.0 * np.pi / env.wavelength * (
                 neff_total * parameters.top_wg_length + dn_dv * parameters.voltage_bottom * parameters.electrode_length)
         loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
         S['top_in_2', 'top_out_2'] = S['top_out_2', 'top_in_2'] = np.exp(1j * phase) * loss
-
-        phase = 2.0 * np.pi / env.wavelength * (
-                    neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage_top * parameters.electrode_length)
-        loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
-        S['bottom_in', 'bottom_out'] = S['bottom_out', 'bottom_in'] = np.exp(1j * phase) * loss
 
         phase = 2.0 * np.pi / env.wavelength * (
                 neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage_bottom * parameters.electrode_length)
@@ -123,7 +123,7 @@ class CustomPushPullModulatorModel(CompactModel):
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
         delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
         phase = 2 * np.pi / env.wavelength * (
-                    neff * parameters.bottom_wg_length - dn_dv * y['voltage_1'] * parameters.electrode_length)
+                    neff * parameters.bottom_wg_length ++ dn_dv * y['voltage_1'] * parameters.electrode_length)
         a = loss * np.exp(1j * phase)
         output_signals['top_out'] = a * input_signals['top_in', t - delay]
         output_signals['top_in'] = a * input_signals['top_out', t - delay]
@@ -132,7 +132,7 @@ class CustomPushPullModulatorModel(CompactModel):
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
         delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
         phase = 2 * np.pi / env.wavelength * (
-                neff * parameters.bottom_wg_length + dn_dv * y['voltage_2'] * parameters.electrode_length)
+                neff * parameters.bottom_wg_length - dn_dv * y['voltage_2'] * parameters.electrode_length)
         a = loss * np.exp(1j * phase)
         output_signals['bottom_out'] = a * input_signals['bottom_in', t - delay]
         output_signals['bottom_in'] = a * input_signals['bottom_out', t - delay]
@@ -141,7 +141,7 @@ class CustomPushPullModulatorModel(CompactModel):
         loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
         delay = parameters.top_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
         phase = 2 * np.pi / env.wavelength * (
-                neff * parameters.top_wg_length - dn_dv * y['voltage_3'] * parameters.electrode_length)
+                neff * parameters.top_wg_length + dn_dv * y['voltage_3'] * parameters.electrode_length)
         a = loss * np.exp(1j * phase)
         output_signals['top_out_2'] = a * input_signals['top_in_2', t - delay]
         output_signals['top_in_2'] = a * input_signals['top_out_2', t - delay]
@@ -150,7 +150,7 @@ class CustomPushPullModulatorModel(CompactModel):
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
         delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
         phase = 2 * np.pi / env.wavelength * (
-                neff * parameters.bottom_wg_length + dn_dv * y['voltage_4'] * parameters.electrode_length)
+                neff * parameters.bottom_wg_length - dn_dv * y['voltage_4'] * parameters.electrode_length)
         a = loss * np.exp(1j * phase)
         output_signals['bottom_out_2'] = a * input_signals['bottom_in_2', t - delay]
         output_signals['bottom_in_2'] = a * input_signals['bottom_out_2', t - delay]
