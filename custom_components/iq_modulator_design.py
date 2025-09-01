@@ -118,7 +118,6 @@ class CustomPushPullModulatorModel(CompactModel):
         switching_voltage = parameters.vpi_l / parameters.electrode_length * 1e4
         dn_dv = parameters.center_wavelength / (2.0 * parameters.electrode_length * switching_voltage)
 
-
         # First-order approximation of the delay
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
         delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
