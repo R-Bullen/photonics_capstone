@@ -10,7 +10,7 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from custom_components.iq_modulator_design import IQModulator
+from custom_components.iq_modulator_design_no_combined_output import IQModulator
 from simulation.simulate_iq_modulator import simulate_modulation_iq_mod, result_modified_OOK, result_modified_16QAM
 
 import numpy as np
@@ -37,15 +37,34 @@ cm = iq_mod.CircuitModel()
 wavelengths = np.linspace(1.55, 1.555, 101)
 S = cm.get_smatrix(wavelengths=wavelengths)
 
-idx_min = np.argmin(np.abs(np.abs(S['out', 'in'])**2))
-idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
-wl = wavelengths[int((idx_min + idx_max) / 2)]
-print("Quadrature wavelength: {}".format(wl))
+# Top Arm
+idx_min_top = np.argmin(np.abs(np.abs(S['top_out', 'in'])**2))
+idx_max_top = np.argmax(np.abs(np.abs(S['top_out', 'in'])**2))
+wl_top = wavelengths[int((idx_min_top + idx_max_top) / 2)]
+print("[Top] Quadrature wavelength: {}".format(wl_top))
 
-plt.figure()
-plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
-plt.plot([wl*1e3, wl*1e3], [0, 1])
-plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
+# Bottom Arm
+idx_min_bot = np.argmin(np.abs(np.abs(S['bottom_out', 'in'])**2))
+idx_max_bot = np.argmax(np.abs(np.abs(S['bottom_out', 'in'])**2))
+wl_bot = wavelengths[int((idx_min_bot + idx_max_bot) / 2)]
+print("[Bot] Quadrature wavelength: {}".format(wl_bot))
+
+plt.figure(1)
+plt.subplot(1,2,1)
+plt.title('Top Arm')
+plt.plot(wavelengths * 1e3, np.abs(S['top_out', 'in'])**2)
+plt.plot([wl_top*1e3, wl_top*1e3], [0, 1])
+plt.plot(wavelengths * 1e3, [np.abs(S['top_out', 'in'][int((idx_min_top + idx_max_top) / 2)])**2 for x in wavelengths])
+plt.xlabel("Wavelength [nm]")
+plt.ylabel("Transmission [au]")
+plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
+plt.ylim(0, 1)
+
+plt.subplot(1,2,2)
+plt.title('Bottom Arm')
+plt.plot(wavelengths * 1e3, np.abs(S['bottom_out', 'in'])**2)
+plt.plot([wl_bot*1e3, wl_bot*1e3], [0, 1])
+plt.plot(wavelengths * 1e3, [np.abs(S['bottom_out', 'in'][int((idx_min_bot + idx_max_bot) / 2)])**2 for x in wavelengths])
 plt.xlabel("Wavelength [nm]")
 plt.ylabel("Transmission [au]")
 plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
@@ -58,7 +77,6 @@ plt.show()
 
 # Define modulator characteristics
 # Voltage needed for a pi phase shift and half pi shift
-print("cm.vpi_l=%f" % cm.vpi_l)
 rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
 V_half_pi = rf_vpi / 2
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
@@ -74,15 +92,15 @@ bit_rate = 50e9
 
 results = simulate_modulation_iq_mod(
     cell=iq_mod,
-    mod_amplitude_i=V_half_pi*0.8,
+    mod_amplitude_i=rf_vpi/2*0.8,
     mod_noise_i=0.0,
-    mod_amplitude_q=V_half_pi*0.8, # 3*V_half_pi,
+    mod_amplitude_q=rf_vpi/2*0.8, # 3*V_half_pi,
     mod_noise_q=0.0,
     opt_amplitude=1.0,
     opt_noise=0.0,
-    v_heater_i=ps_vpi*3/2,  # The half pi phase shift implements orthogonal modulation
-    v_heater_q=ps_vpi*3/2,
-    v_heater_out=ps_vpi,
+    v_heater_i=ps_vpi,  # The half pi phase shift implements orthogonal modulation
+    v_heater_q=ps_vpi,
+    v_heater_out=ps_vpi/2,
     bit_rate=50e9,
     n_bytes=2 ** 6,
     steps_per_bit=2 ** 7,
@@ -134,7 +152,7 @@ eye.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res = result_modified_16QAM(results )
+res = result_modified_16QAM(results)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)
