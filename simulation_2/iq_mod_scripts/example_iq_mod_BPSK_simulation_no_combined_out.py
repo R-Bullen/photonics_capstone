@@ -12,7 +12,7 @@ import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
 
 from custom_components.iq_modulator_design_no_combined_output import IQModulator
-from simulation_2.iq_mod_scripts.simulation.simulate_iq_mod_BPSK import simulate_modulation_BPSK, result_modified_BPSK_top, result_modified_BPSK_bottom
+from simulation_2.iq_mod_scripts.simulation.simulate_iq_mod_BPSK_no_combiner import simulate_modulation_BPSK, result_modified_BPSK_top, result_modified_BPSK_bottom
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=True, delay_at_input=True)
+iq_mod = IQModulator(with_delays=False, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 
@@ -65,7 +65,7 @@ print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 ps_vpi = 0.1 / (200/10000)
 print("PS Vpi = %f" % ps_vpi)
 
-cm.bandwidth = 25e9    # Modulator bandwidth (in Hz)
+cm.bandwidth = 50e9    # Modulator bandwidth (in Hz)
 
 num_symbols = 2**8
 samples_per_symbol = 2**7
@@ -83,9 +83,9 @@ results = simulate_modulation_BPSK(
     mod_noise_q=0.0,
     opt_amplitude=2.0,
     opt_noise=0.0,
-    v_heater_i=0,  # The half pi phase shift implements orthogonal modulation
+    v_heater_i=ps_vpi/2,  # The half pi phase shift implements orthogonal modulation
     v_heater_q=0,
-    v_mzm_left1=0,  # MZM (left) works at its Maximum transmission points
+    v_mzm_left1=ps_vpi/2,  # MZM (left) works at its Maximum transmission points
     v_mzm_left2=0.0,
     v_mzm_right1=0,  # MZM (right) works at its Maximum transmission points
     v_mzm_right2=0.0,
@@ -154,7 +154,7 @@ eye.visualize(show=False)
 # Plot Constellation diagram
 ########################################################################################################################
 
-plt.figure(4)
+plt.figure(6)
 res = result_modified_BPSK_top(results)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
@@ -163,9 +163,9 @@ plt.ylabel("imag", fontsize=14)
 plt.title("Constellation diagram", fontsize=14)
 # plt.xlim([-1.0, 1.0])
 # plt.ylim([-1.0, 1.0])
-plt.show()
+# plt.show()
 
-plt.figure(5)
+plt.figure(7)
 res = result_modified_BPSK_bottom(results)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()

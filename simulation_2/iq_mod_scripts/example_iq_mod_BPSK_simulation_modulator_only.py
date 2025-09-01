@@ -29,7 +29,7 @@ dual_mzm = CPWElectrodeWithWaveguides()
 
 lv = dual_mzm.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 
-# lv.visualize(annotate=True)
+lv.visualize(annotate=True)
 
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the minimum transmission point
@@ -91,13 +91,14 @@ results = simulate_dual_mzm_BPSK(
 )
 
 # outputs = ["sig_i", "revsig_i", "sig_q", "revsig_q", "ht_i", "ht_q", "src_in", "out"]
-outputs = ["sig_i", "sig_q", "src_in_1", "out_4"]
+outputs = ["sig_i", "sig_q", "src_in_1", "out_3", "out_4"]
 titles = [
     "RF signal_i",
     # "RF reversed signal_i",
     "RF signal_q",
     "Optical input",
-    "Optical output",
+    "Optical output 1",
+    "Optical output 2",
 ]
 ylabels = [
     "voltage [V]",
@@ -105,9 +106,11 @@ ylabels = [
     # "voltage [V]",
     # "voltage [V]",
     "power [W]",
+    "power [W]",
+    "power [W]",
 ]
 # process = [np.real, np.real, np.real, np.real, np.real, np.real, np.abs, np.angle]
-process = [np.real, np.real, np.abs, np.angle, np.angle, np.angle, np.angle]
+process = [np.real, np.real, np.abs, np.angle, np.angle, ]
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
     data = pr(results[out][1:])
