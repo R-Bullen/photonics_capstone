@@ -199,10 +199,8 @@ def simulate_modulation_PAM4(
 
 def result_modified_PAM4_top(result):
     res_sample = random.sample(list(result["top_out"]), 200)
-
     return [res * np.exp(-1j * np.angle(res)) for res in res_sample]
 
 def result_modified_PAM4_bottom(result):
     res_sample = random.sample(list(result["bottom_out"]), 200)
-
     return [res * np.exp(-1j * np.angle(res)) for res in res_sample]

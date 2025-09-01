@@ -25,7 +25,7 @@ electrode_length = 8000
 iq_mod = IQModulator(with_delays=False, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
-lv.visualize(annotate=True)
+#lv.visualize(annotate=True)
 
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the minimum transmission point
@@ -75,9 +75,9 @@ bit_rate = 50e9
 
 results = simulate_modulation_PAM4(
     cell=iq_mod,
-    mod_amplitude_i=4.0,
+    mod_amplitude_i=rf_vpi/2,
     mod_noise_i=0.0,
-    mod_amplitude_q=2.0,
+    mod_amplitude_q=0,
     mod_noise_q=0.0,
     opt_amplitude=1.0,
     opt_noise=0.0,
@@ -121,15 +121,18 @@ plt.tight_layout()
 ########################################################################################################################
 # Plot EyeDiagram
 ########################################################################################################################
-
+'''
 num_symbols = 2**8
 samples_per_symbol = 2**7
-data_stream = np.abs(results["top_out"]) ** 2
+data_stream_top = np.abs(results["top_out"]) ** 2
+data_stream_bottom = np.abs(results["bottom_out"]) ** 2
 baud_rate = 50e9
 time_step = 1.0 / (baud_rate * samples_per_symbol)
-eye = i3.EyeDiagram(data_stream, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
-eye.visualize(show=False)
-
+eye_top = i3.EyeDiagram(data_stream_top, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
+eye_top.visualize(show=False)
+eye_bottom = i3.EyeDiagram(data_stream_bottom, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
+eye_bottom.visualize(show=False)
+'''
 ########################################################################################################################
 # Plot Constellation diagram
 ########################################################################################################################
@@ -139,12 +142,17 @@ res_top = result_modified_PAM4_top(results)
 res_bottom = result_modified_PAM4_top(results)
 plt.subplot(1,2,1)
 plt.scatter(np.real(res_top), np.imag(res_top), marker="+", linewidths=10, alpha=0.1)
+plt.grid()
+plt.xlabel("real", fontsize=14)
+plt.ylabel("imag", fontsize=14)
+plt.title("(Top) Constellation diagram", fontsize=14)
+
 plt.subplot(1,2,2)
 plt.scatter(np.real(res_bottom), np.imag(res_top), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)
 plt.ylabel("imag", fontsize=14)
-plt.title("Constellation diagram", fontsize=14)
+plt.title("(Bottom) Constellation diagram", fontsize=14)
 # plt.xlim([-1.0, 1.0])
 # plt.ylim([-1.0, 1.0])
 plt.show()
