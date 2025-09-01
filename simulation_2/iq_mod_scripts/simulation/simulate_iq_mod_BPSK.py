@@ -12,7 +12,7 @@ import ipkiss3.all as i3
 from si_fab.benches.sources import random_bitsource, rand_normal
 
 
-def simulate_modulation_QPSK(
+def simulate_modulation_BPSK(
     cell,
     mod_amplitude_i=None,
     mod_noise_i=None,
@@ -91,16 +91,16 @@ def simulate_modulation_QPSK(
         amplitude=mod_amplitude_q,
         n_bytes=n_bytes,
     )
-    f_mod_i2 = random_bitsource(
-        bitrate=bit_rate,
-        amplitude=mod_amplitude_i / 2,
-        n_bytes=n_bytes,
-    )
-    f_mod_q2 = random_bitsource(
-        bitrate=bit_rate,
-        amplitude=mod_amplitude_q / 2,
-        n_bytes=n_bytes,
-    )
+    # f_mod_i2 = random_bitsource(
+    #     bitrate=bit_rate,
+    #     amplitude=mod_amplitude_i / 2,
+    #     n_bytes=n_bytes,
+    # )
+    # f_mod_q2 = random_bitsource(
+    #     bitrate=bit_rate,
+    #     amplitude=mod_amplitude_q / 2,
+    #     n_bytes=n_bytes,
+    # )
     rand_normal_dist = rand_normal()
     src_in = i3.FunctionExcitation(
         port_domain=i3.OpticalDomain, excitation_function=lambda t: opt_amplitude + rand_normal_dist(opt_noise)
@@ -108,15 +108,15 @@ def simulate_modulation_QPSK(
     signal_i = i3.FunctionExcitation(
         port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_i(t) + rand_normal_dist(mod_noise_i)
     )
-    revsignal_i = i3.FunctionExcitation(
-        port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_i2(t) - rand_normal_dist(mod_noise_i)
-    )
+    # revsignal_i = i3.FunctionExcitation(
+    #     port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_i2(t) - rand_normal_dist(mod_noise_i)
+    # )
     signal_q = i3.FunctionExcitation(
         port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_q(t) + rand_normal_dist(mod_noise_q)
     )
-    revsignal_q = i3.FunctionExcitation(
-        port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_q2(t) - rand_normal_dist(mod_noise_q)
-    )
+    # revsignal_q = i3.FunctionExcitation(
+    #     port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_q2(t) - rand_normal_dist(mod_noise_q)
+    # )
     heater_i = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_i)
     heater_q = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_q)
     mzm_left1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_left1)
@@ -137,12 +137,13 @@ def simulate_modulation_QPSK(
     testbench = i3.ConnectComponents(
         child_cells={
             "DUT": cell,
-            "out": i3.Probe(port_domain=i3.OpticalDomain),
+            "top_out": i3.Probe(port_domain=i3.OpticalDomain),
+            "bottom_out": i3.Probe(port_domain=i3.OpticalDomain),
             "src_in": src_in,
             "sig_i": signal_i,
-            "revsig_i": revsignal_i,
+            # "revsig_i": revsignal_i,
             "sig_q": signal_q,
-            "revsig_q": revsignal_q,
+            # "revsig_q": revsignal_q,
             "gnd1": gnd1,
             "gnd2": gnd2,
             "gnd3": gnd3,
@@ -161,7 +162,8 @@ def simulate_modulation_QPSK(
         },
         links=[
             ("src_in:out", "DUT:in"),
-            ("DUT:out", "out:in"),
+            ("DUT:top_out", "top_out:in"),
+            ("DUT:bottom_out", "bottom_out:in"),
             ("DUT:mzm_1_ps_out_in", "ht_i:out"),
             ("DUT:mzm_2_ps_out_in", "ht_q:out"),
             ("DUT:mzm_1_ps_1_in", "mzm_left1:out"),
@@ -192,24 +194,47 @@ def simulate_modulation_QPSK(
     )
     return results
 
-
-def result_modified_16QAM(result):
-    res_sample = random.sample(list(result["out"]), 1000)
-    angle_sample = np.mean(np.angle(res_sample))
-
-    return [res * np.exp(-1j * angle_sample) for res in res_sample]
-
-def result_modified_QPSK(result):
+def result_modified_BPSK(result):
     results_rotation = []
     res_sample = random.sample(list(result["out"]), 200)
     for res in res_sample:
         if np.angle(res) > 0 and np.angle(res) < np.pi / 2:
-            results_rotation.append(res * np.exp(1j * (np.pi / 4 - np.angle(res))))
+            results_rotation.append(res * np.exp(-1j * np.angle(res)))
         elif np.angle(res) > np.pi / 2 and np.angle(res) < np.pi:
-            results_rotation.append(res * np.exp(1j * (np.pi * 3 / 4 - np.angle(res))))
+            results_rotation.append(res * np.exp(-1j * (np.angle(res) - np.pi)))
         elif np.angle(res) > -np.pi and np.angle(res) < -np.pi / 2:
-            results_rotation.append(res * np.exp(1j * (np.pi * 5 / 4 - np.angle(res))))
+            results_rotation.append(res * np.exp(-1j * (np.angle(res) - np.pi)))
         elif np.angle(res) > -np.pi / 2 and np.angle(res) < 0:
-            results_rotation.append(res * np.exp(1j * (-np.pi / 4 - np.angle(res))))
+            results_rotation.append(res * np.exp(-1j * np.angle(res)))
+
+    return results_rotation
+
+def result_modified_BPSK_top(result):
+    results_rotation = []
+    res_sample = random.sample(list(result["top_out"]), 200)
+    for res in res_sample:
+        if np.angle(res) > 0 and np.angle(res) < np.pi / 2:
+            results_rotation.append(res * np.exp(-1j * np.angle(res)))
+        elif np.angle(res) > np.pi / 2 and np.angle(res) < np.pi:
+            results_rotation.append(res * np.exp(-1j * (np.angle(res) - np.pi)))
+        elif np.angle(res) > -np.pi and np.angle(res) < -np.pi / 2:
+            results_rotation.append(res * np.exp(-1j * (np.angle(res) - np.pi)))
+        elif np.angle(res) > -np.pi / 2 and np.angle(res) < 0:
+            results_rotation.append(res * np.exp(-1j * np.angle(res)))
+
+    return results_rotation
+
+def result_modified_BPSK_bottom(result):
+    results_rotation = []
+    res_sample = random.sample(list(result["bottom_out"]), 200)
+    for res in res_sample:
+        if np.angle(res) > 0 and np.angle(res) < np.pi / 2:
+            results_rotation.append(res * np.exp(-1j * np.angle(res)))
+        elif np.angle(res) > np.pi / 2 and np.angle(res) < np.pi:
+            results_rotation.append(res * np.exp(-1j * (np.angle(res) - np.pi)))
+        elif np.angle(res) > -np.pi and np.angle(res) < -np.pi / 2:
+            results_rotation.append(res * np.exp(-1j * (np.angle(res) - np.pi)))
+        elif np.angle(res) > -np.pi / 2 and np.angle(res) < 0:
+            results_rotation.append(res * np.exp(-1j * np.angle(res)))
 
     return results_rotation
