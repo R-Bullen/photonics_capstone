@@ -12,7 +12,7 @@ import ipkiss3.all as i3
 from si_fab.benches.sources import random_bitsource, rand_normal
 
 
-def simulate_modulation_QAM(
+def simulate_modulation_16QAM(
     cell,
     mod_amplitude_i=None,
     mod_noise_i=None,
@@ -91,16 +91,6 @@ def simulate_modulation_QAM(
         amplitude=mod_amplitude_q,
         n_bytes=n_bytes,
     )
-    f_mod_i2 = random_bitsource(
-        bitrate=bit_rate,
-        amplitude=mod_amplitude_i / 2,
-        n_bytes=n_bytes,
-    )
-    f_mod_q2 = random_bitsource(
-        bitrate=bit_rate,
-        amplitude=mod_amplitude_q / 2,
-        n_bytes=n_bytes,
-    )
     rand_normal_dist = rand_normal()
     src_in = i3.FunctionExcitation(
         port_domain=i3.OpticalDomain, excitation_function=lambda t: opt_amplitude + rand_normal_dist(opt_noise)
@@ -108,14 +98,8 @@ def simulate_modulation_QAM(
     signal_i = i3.FunctionExcitation(
         port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_i(t) + rand_normal_dist(mod_noise_i)
     )
-    revsignal_i = i3.FunctionExcitation(
-        port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_i2(t) - rand_normal_dist(mod_noise_i)
-    )
     signal_q = i3.FunctionExcitation(
         port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_q(t) + rand_normal_dist(mod_noise_q)
-    )
-    revsignal_q = i3.FunctionExcitation(
-        port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_q2(t) - rand_normal_dist(mod_noise_q)
     )
     heater_i = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_i)
     heater_q = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_q)
@@ -129,6 +113,9 @@ def simulate_modulation_QAM(
     gnd4 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
     gnd5 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
     gnd6 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+    gnd7 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+    gnd8 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
+    gnd9 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
 
     t0 = 0.0
     t1 = n_bytes / bit_rate
@@ -140,18 +127,16 @@ def simulate_modulation_QAM(
             "out": i3.Probe(port_domain=i3.OpticalDomain),
             "src_in": src_in,
             "sig_i": signal_i,
-            # "revsig_i": revsignal_i,
             "sig_q": signal_q,
-            # "revsig_q": revsignal_q,
             "gnd1": gnd1,
             "gnd2": gnd2,
             "gnd3": gnd3,
             "gnd4": gnd4,
             "gnd5": gnd5,
             "gnd6": gnd6,
-            "gnd7": gnd6,
-            "gnd8": gnd6,
-            "gnd9": gnd6,
+            "gnd7": gnd7,
+            "gnd8": gnd8,
+            "gnd9": gnd9,
             "ht_i": heater_i,
             "ht_q": heater_q,
             "mzm_left1": mzm_left1,
