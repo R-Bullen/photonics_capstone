@@ -120,9 +120,9 @@ class CustomPushPullModulatorModel(CompactModel):
 
         # First-order approximation of the delay
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
-        delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
+        delay = parameters.top_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
         phase = 2 * np.pi / env.wavelength * (
-                    neff * parameters.bottom_wg_length + dn_dv * y['voltage_1'] * parameters.electrode_length)
+                    neff * parameters.top_wg_length + dn_dv * y['voltage_1'] * parameters.electrode_length)
         a = loss * np.exp(1j * phase)
         output_signals['top_out'] = a * input_signals['top_in', t - delay]
         output_signals['top_in'] = a * input_signals['top_out', t - delay]

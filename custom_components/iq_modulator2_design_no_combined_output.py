@@ -145,7 +145,7 @@ class CustomPushPullModulatorModel(CompactModel):
         output_signals['bottom_in_2'] = a * input_signals['bottom_out_2', t - delay]
 
         loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
-        phase = 2 * np.pi / env.wavelength * (neff * parameters.top_wg_length + dn_dv * y['voltage_1'] * parameters.electrode_length)
+        phase = 2 * np.pi / env.wavelength * (neff * parameters.top_wg_length + dn_dv * y['voltage_3'] * parameters.electrode_length)
         delay = parameters.top_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
         a = loss * np.exp(1j * phase)
         output_signals['top_out_2'] = a * input_signals['top_in_2', t - delay]

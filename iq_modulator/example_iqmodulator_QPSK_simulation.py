@@ -62,7 +62,7 @@ mzm = MZModulator(
 
 # IQ Modulator
 IQ_mod = IQModulator(mzm=mzm)
-IQ_mod.Layout().visualize(show=False)
+# IQ_mod.Layout().visualize(show=False)
 
 ########################################################################################################################
 # Simulation of a IQ modulator working in QPSK modulation format.
@@ -71,11 +71,11 @@ IQ_mod.Layout().visualize(show=False)
 results = simulate_modulation_iqmod(
     cell=IQ_mod,
     mod_amplitude_i=3.0,
-    mod_noise_i=0.5,
+    mod_noise_i=0.0,
     mod_amplitude_q=3.0,
-    mod_noise_q=0.5,
+    mod_noise_q=0.0,
     opt_amplitude=2.0,
-    opt_noise=0.01,
+    opt_noise=0.0,
     v_heater_i=V_half_pi,  # The half pi phase shift implements orthogonal modulation
     v_heater_q=0.0,
     v_mzm_left1=V_half_pi,  # MZM (left) works at its Maximum transmission points

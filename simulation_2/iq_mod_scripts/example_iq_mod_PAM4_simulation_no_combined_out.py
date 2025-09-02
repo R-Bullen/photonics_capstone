@@ -75,9 +75,9 @@ bit_rate = 50e9
 
 results = simulate_modulation_PAM4(
     cell=iq_mod,
-    mod_amplitude_i=rf_vpi,
+    mod_amplitude_i=3.0,
     mod_noise_i=0.0,
-    mod_amplitude_q=rf_vpi,
+    mod_amplitude_q=3.0,
     mod_noise_q=0.0,
     opt_amplitude=1.0,
     opt_noise=0.0,
