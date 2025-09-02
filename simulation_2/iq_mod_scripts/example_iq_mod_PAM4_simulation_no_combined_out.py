@@ -10,8 +10,8 @@ This script generates several outputs:
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
 
-from custom_components.iq_modulator_design_no_combined_output import IQModulator
-from simulation_2.iq_mod_scripts.simulation.simulate_iq_mod_PAM4_no_combiner import simulate_modulation_PAM4, result_modified_PAM4_top, result_modified_PAM4_bottom
+from custom_components.iq_modulator2_design_no_combined_output import IQModulator
+from simulation_2.iq_mod_scripts.simulation.simulate_iq_mod_PAM4_no_combiner import simulate_modulation_PAM4, result_modified_PAM4
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -75,9 +75,9 @@ bit_rate = 50e9
 
 results = simulate_modulation_PAM4(
     cell=iq_mod,
-    mod_amplitude_i=rf_vpi/2,
+    mod_amplitude_i=3,
     mod_noise_i=0.0,
-    mod_amplitude_q=0,
+    mod_amplitude_q=3,
     mod_noise_q=0.0,
     opt_amplitude=1.0,
     opt_noise=0.0,
@@ -138,8 +138,8 @@ eye_bottom.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res_top = result_modified_PAM4_top(results)
-res_bottom = result_modified_PAM4_top(results)
+res_top = result_modified_PAM4(results, "top_out")
+res_bottom = result_modified_PAM4(results, "bottom_out")
 plt.subplot(1,2,1)
 plt.scatter(np.real(res_top), np.imag(res_top), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
