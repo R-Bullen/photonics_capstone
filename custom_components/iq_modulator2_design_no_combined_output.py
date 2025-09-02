@@ -115,52 +115,48 @@ class CustomPushPullModulatorModel(CompactModel):
         dneff = -(parameters.n_g - parameters.n_eff) / parameters.center_wavelength
         neff = parameters.n_eff + (env.wavelength - parameters.center_wavelength) * dneff
 
+        # First-order approximation of the delay
         switching_voltage = parameters.vpi_l / parameters.electrode_length * 1e4
         dn_dv = parameters.center_wavelength / (2.0 * parameters.electrode_length * switching_voltage)
 
-
-        # First-order approximation of the delay
+        # Top Arm
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
+        phase = 2 * np.pi / env.wavelength * (neff * parameters.bottom_wg_length - dn_dv * y['voltage_2'] * parameters.electrode_length)
         delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
-        phase = 2 * np.pi / env.wavelength * (
-                    neff * parameters.bottom_wg_length - dn_dv * y['voltage_1'] * parameters.electrode_length)
-        a = loss * np.exp(1j * phase)
-        output_signals['top_out'] = a * input_signals['top_in', t - delay]
-        output_signals['top_in'] = a * input_signals['top_out', t - delay]
-
-        # second waveguide from the top
-        loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
-        delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
-        phase = 2 * np.pi / env.wavelength * (
-                neff * parameters.bottom_wg_length + dn_dv * y['voltage_2'] * parameters.electrode_length)
         a = loss * np.exp(1j * phase)
         output_signals['bottom_out'] = a * input_signals['bottom_in', t - delay]
         output_signals['bottom_in'] = a * input_signals['bottom_out', t - delay]
 
-        # third waveguide from the top
         loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
+        phase = 2 * np.pi / env.wavelength * (neff * parameters.top_wg_length + dn_dv * y['voltage_1'] * parameters.electrode_length)
         delay = parameters.top_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
-        phase = 2 * np.pi / env.wavelength * (
-                neff * parameters.top_wg_length + dn_dv * y['voltage_3'] * parameters.electrode_length)
         a = loss * np.exp(1j * phase)
-        output_signals['top_out_2'] = a * input_signals['top_in_2', t - delay]
-        output_signals['top_in_2'] = a * input_signals['top_out_2', t - delay]
+        output_signals['top_out'] = a * input_signals['top_in', t - delay]
+        output_signals['top_in'] = a * input_signals['top_out', t - delay]
 
-        # fourth waveguide from the top
+        # Bottom Arm
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
+        phase = 2 * np.pi / env.wavelength * (neff * parameters.bottom_wg_length - dn_dv * y['voltage_4'] * parameters.electrode_length)
         delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
-        phase = 2 * np.pi / env.wavelength * (
-                neff * parameters.bottom_wg_length - dn_dv * y['voltage_4'] * parameters.electrode_length)
         a = loss * np.exp(1j * phase)
         output_signals['bottom_out_2'] = a * input_signals['bottom_in_2', t - delay]
         output_signals['bottom_in_2'] = a * input_signals['bottom_out_2', t - delay]
 
+        loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
+        phase = 2 * np.pi / env.wavelength * (neff * parameters.top_wg_length + dn_dv * y['voltage_1'] * parameters.electrode_length)
+        delay = parameters.top_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
+        a = loss * np.exp(1j * phase)
+        output_signals['top_out_2'] = a * input_signals['top_in_2', t - delay]
+        output_signals['top_in_2'] = a * input_signals['top_out_2', t - delay]
+
     def calculate_dydt(parameters, env, dydt, y, t, input_signals):
         tau = 1.0 / (2.0 * np.pi * parameters.bandwidth)
-        dydt['voltage_1'] = ((input_signals['top_signal'] - input_signals['top_ground']) - y['voltage_1']) / tau
+
         dydt['voltage_2'] = ((input_signals['top_signal'] - input_signals['middle_ground']) - y['voltage_2']) / tau
-        dydt['voltage_3'] = ((input_signals['bottom_signal'] - input_signals['middle_ground']) - y['voltage_3']) / tau
+        dydt['voltage_1'] = ((input_signals['top_signal'] - input_signals['top_ground']) - y['voltage_1']) / tau
+
         dydt['voltage_4'] = ((input_signals['bottom_signal'] - input_signals['bottom_ground']) - y['voltage_4']) / tau
+        dydt['voltage_3'] = ((input_signals['bottom_signal'] - input_signals['middle_ground']) - y['voltage_3']) / tau
 
 
 class CPWElectrode(i3.PCell):
