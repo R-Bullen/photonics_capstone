@@ -25,8 +25,7 @@ electrode_length = 8000
 iq_mod = IQModulator(with_delays=False, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
-
-# lv.visualize(annotate=True)
+#lv.visualize(annotate=True)
 
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the minimum transmission point
@@ -76,14 +75,14 @@ bit_rate = 50e9
 
 results = simulate_modulation_PAM4(
     cell=iq_mod,
-    mod_amplitude_i=2.0,
+    mod_amplitude_i=rf_vpi,
     mod_noise_i=0.0,
-    mod_amplitude_q=1.0,
+    mod_amplitude_q=rf_vpi,
     mod_noise_q=0.0,
     opt_amplitude=1.0,
     opt_noise=0.0,
-    v_heater_i=0.0,  # 4-Level Amplitude Modulation, thus no phase shift
-    v_heater_q=0.0,
+    v_heater_i=0,  # 4-Level Amplitude Modulation, thus no phase shift
+    v_heater_q=0,
     v_mzm_left1=0.0,  # MZM (left) works at its linear biased point
     v_mzm_left2=0.0,
     v_mzm_right1=0.0,  # MZM (right) works at its linear biased point
@@ -144,6 +143,6 @@ plt.grid()
 plt.xlabel("real", fontsize=14)
 plt.ylabel("imag", fontsize=14)
 plt.title("Constellation diagram", fontsize=14)
-# plt.xlim([-1.0, 1.0])
-# plt.ylim([-1.0, 1.0])
+plt.xlim([-1.0, 1.0])
+plt.ylim([-1.0, 1.0])
 plt.show()
