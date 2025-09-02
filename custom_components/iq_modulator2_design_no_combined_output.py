@@ -91,23 +91,25 @@ class CustomPushPullModulatorModel(CompactModel):
         switching_voltage = parameters.vpi_l / parameters.electrode_length * 1e4
         dn_dv = parameters.center_wavelength / (2.0 * parameters.electrode_length * switching_voltage)
 
-        phase = 2.0 * np.pi / env.wavelength * (
-                    neff_total * parameters.top_wg_length + dn_dv * parameters.voltage_top * parameters.electrode_length)
+        # Top Arm
+        phase = 2.0 * np.pi / env.wavelength * (neff_total * parameters.top_wg_length + dn_dv * parameters.voltage_top * parameters.electrode_length)
+
         loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
         S['top_in', 'top_out'] = S['top_out', 'top_in'] = np.exp(1j * phase) * loss
 
-        phase = 2.0 * np.pi / env.wavelength * (
-                neff_total * parameters.top_wg_length + dn_dv * parameters.voltage_bottom * parameters.electrode_length)
-        loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
-        S['top_in_2', 'top_out_2'] = S['top_out_2', 'top_in_2'] = np.exp(1j * phase) * loss
+        phase = 2.0 * np.pi / env.wavelength * (neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage_top * parameters.electrode_length)
 
-        phase = 2.0 * np.pi / env.wavelength * (
-                    neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage_top * parameters.electrode_length)
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
         S['bottom_in', 'bottom_out'] = S['bottom_out', 'bottom_in'] = np.exp(1j * phase) * loss
 
-        phase = 2.0 * np.pi / env.wavelength * (
-                neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage_bottom * parameters.electrode_length)
+        # Bottom Arm
+        phase = 2.0 * np.pi / env.wavelength * (neff_total * parameters.top_wg_length + dn_dv * parameters.voltage_bottom * parameters.electrode_length)
+
+        loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
+        S['top_in_2', 'top_out_2'] = S['top_out_2', 'top_in_2'] = np.exp(1j * phase) * loss
+
+        phase = 2.0 * np.pi / env.wavelength * (neff_total * parameters.bottom_wg_length - dn_dv * parameters.voltage_bottom * parameters.electrode_length)
+
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
         S['bottom_in_2', 'bottom_out_2'] = S['bottom_out_2', 'bottom_in_2'] = np.exp(1j * phase) * loss
 
