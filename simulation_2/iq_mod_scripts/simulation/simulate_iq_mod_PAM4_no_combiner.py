@@ -201,3 +201,7 @@ def result_modified_PAM4(result, arg="out"):
     res_sample = random.sample(list(result[arg]), 200)
     return [res * np.exp(-1j * np.angle(res)) for res in res_sample]
 
+def result_modified_OOK(result, samples_per_symbol, sampling_point, arg="out"):
+    res_sample = result[arg][int(samples_per_symbol * (10 + sampling_point))::samples_per_symbol]  # Ignore the first 10 symbols
+    return [res * np.exp(-1j * np.angle(res)) for res in res_sample]
+

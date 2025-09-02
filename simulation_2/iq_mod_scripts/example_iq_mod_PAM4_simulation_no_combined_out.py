@@ -11,7 +11,7 @@ import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
 
 from custom_components.iq_modulator2_design_no_combined_output import IQModulator
-from simulation_2.iq_mod_scripts.simulation.simulate_iq_mod_PAM4_no_combiner import simulate_modulation_PAM4, result_modified_PAM4
+from simulation_2.iq_mod_scripts.simulation.simulate_iq_mod_PAM4_no_combiner import simulate_modulation_PAM4, result_modified_PAM4, result_modified_OOK
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -75,14 +75,14 @@ bit_rate = 50e9
 
 results = simulate_modulation_PAM4(
     cell=iq_mod,
-    mod_amplitude_i=3,
+    mod_amplitude_i=rf_vpi,
     mod_noise_i=0.0,
-    mod_amplitude_q=3,
+    mod_amplitude_q=rf_vpi,
     mod_noise_q=0.0,
     opt_amplitude=1.0,
     opt_noise=0.0,
-    v_heater_i=0,  # 4-Level Amplitude Modulation, thus no phase shift
-    v_heater_q=0,
+    v_heater_i=0.0,  # 4-Level Amplitude Modulation, thus no phase shift
+    v_heater_q=0.0,
     v_mzm_left1=0.0,  # MZM (left) works at its linear biased point
     v_mzm_left2=0.0,
     v_mzm_right1=0.0,  # MZM (right) works at its linear biased point
@@ -97,8 +97,8 @@ titles = [
     "RF signal_i",
     "RF signal_q",
     "Optical input",
-    "Optical output",
-    "Optical output",
+    "Optical output_i",
+    "Optical output_q",
 ]
 ylabels = [
     "voltage [V]",
@@ -121,9 +121,10 @@ plt.tight_layout()
 ########################################################################################################################
 # Plot EyeDiagram
 ########################################################################################################################
-'''
+
 num_symbols = 2**8
 samples_per_symbol = 2**7
+'''
 data_stream_top = np.abs(results["top_out"]) ** 2
 data_stream_bottom = np.abs(results["bottom_out"]) ** 2
 baud_rate = 50e9
@@ -138,14 +139,18 @@ eye_bottom.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res_top = result_modified_PAM4(results, "top_out")
-res_bottom = result_modified_PAM4(results, "bottom_out")
+#res_top = result_modified_PAM4(results, "top_out")
+#res_bottom = result_modified_PAM4(results, "bottom_out")
+res_top = result_modified_OOK(results, samples_per_symbol, 0.8, "top_out")
+res_bottom = result_modified_OOK(results, samples_per_symbol, 0.8, "bottom_out")
 plt.subplot(1,2,1)
 plt.scatter(np.real(res_top), np.imag(res_top), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)
 plt.ylabel("imag", fontsize=14)
 plt.title("(Top) Constellation diagram", fontsize=14)
+plt.xlim([-1.0, 1.0])
+plt.ylim([-1.0, 1.0])
 
 plt.subplot(1,2,2)
 plt.scatter(np.real(res_bottom), np.imag(res_top), marker="+", linewidths=10, alpha=0.1)
@@ -153,7 +158,7 @@ plt.grid()
 plt.xlabel("real", fontsize=14)
 plt.ylabel("imag", fontsize=14)
 plt.title("(Bottom) Constellation diagram", fontsize=14)
-# plt.xlim([-1.0, 1.0])
-# plt.ylim([-1.0, 1.0])
+plt.xlim([-1.0, 1.0])
+plt.ylim([-1.0, 1.0])
 plt.show()
 
