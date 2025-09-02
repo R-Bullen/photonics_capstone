@@ -199,3 +199,5 @@ def result_modified_PAM4(result):
     res_sample = random.sample(list(result["out"]), 200)
 
     return [res * np.exp(-1j * np.angle(res)) for res in res_sample]
+
+
