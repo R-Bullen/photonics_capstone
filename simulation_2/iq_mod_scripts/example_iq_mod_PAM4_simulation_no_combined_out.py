@@ -124,16 +124,16 @@ plt.tight_layout()
 
 num_symbols = 2**8
 samples_per_symbol = 2**7
-'''
+
 data_stream_top = np.abs(results["top_out"]) ** 2
 data_stream_bottom = np.abs(results["bottom_out"]) ** 2
 baud_rate = 50e9
 time_step = 1.0 / (baud_rate * samples_per_symbol)
 eye_top = i3.EyeDiagram(data_stream_top, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
-eye_top.visualize(show=False)
+eye_top.visualize(show=False, title="Top Eye Diagram")
 eye_bottom = i3.EyeDiagram(data_stream_bottom, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
-eye_bottom.visualize(show=False)
-'''
+eye_bottom.visualize(show=False, title="Bottom Eye Diagram")
+
 ########################################################################################################################
 # Plot Constellation diagram
 ########################################################################################################################
