@@ -78,12 +78,17 @@ results = simulate_modulation_16QAM(
     mod_noise_q=0.0,
     opt_amplitude=1.0,
     opt_noise=0.0,
-    v_heater_i=ps_vpi, # The half pi phase shift implements orthogonal modulation
-    v_heater_q=0,
-    v_mzm_left1=0.0,  # MZM (left) works at its Maximum transmission points
-    v_mzm_left2=0.0,
-    v_mzm_right1=0.0,  # MZM (right) works at its Maximum transmission points
-    v_mzm_right2=0.0,
+
+    # Output Heaters
+    v_heater_i=0.0,
+    v_heater_q=ps_vpi/4,
+
+    # WG Heaters
+    v_mzm_left1=ps_vpi/2,    # Top Arm - Top PS
+    v_mzm_left2=0.0,    # Top Arm - Bottom PS
+    v_mzm_right1=ps_vpi/2,   # Bottom Arm - Top PS
+    v_mzm_right2=0.0,   # Bottom Arm - Bottom PS
+
     bit_rate=50e9,
     n_bytes=2**8,
     steps_per_bit=2**7,
@@ -137,8 +142,6 @@ eye_bottom.visualize(show=False, title="Bottom Eye Diagram")
 plt.figure(4)
 res_top = result_modified_16QAM(results, "top_out")
 res_bottom = result_modified_16QAM(results, "bottom_out")
-#res_top = result_modified_OOK(results, samples_per_symbol, 0.8, "top_out")
-#res_bottom = result_modified_OOK(results, samples_per_symbol, 0.8, "bottom_out")
 plt.subplot(1,2,1)
 plt.scatter(np.real(res_top), np.imag(res_top), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
