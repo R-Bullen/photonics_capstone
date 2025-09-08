@@ -10,7 +10,7 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from custom_components.iq_modulator_design import IQModulator
+from custom_components.iq_modulator_design_new_model import IQModulator
 from simulation_2.iq_mod_scripts.simulation.simulate_iq_mod_16QAM import simulate_modulation_16QAM, result_modified_16QAM
 
 import numpy as np
@@ -66,7 +66,7 @@ print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 ps_vpi = 0.1 / (200/10000)
 print("PS Vpi = %f" % ps_vpi)
 
-cm.bandwidth = 100e9    # Modulator bandwidth (in Hz)
+cm.bandwidth = 500e9    # Modulator bandwidth (in Hz)
 
 num_symbols = 2**7
 samples_per_symbol = 2**7
@@ -74,22 +74,23 @@ bit_rate = 50e9
 
 results = simulate_modulation_16QAM(
     cell=iq_mod,
-    mod_amplitude_i=3.0,
+    mod_amplitude_i=1.0,
     mod_noise_i=0.0,
-    mod_amplitude_q=2.0,
+    mod_amplitude_q=1.0,
     mod_noise_q=0.0,
     opt_amplitude=2.0,
     opt_noise=0.0,
-    v_heater_i=ps_vpi/2, # The half pi phase shift implements orthogonal modulation
-    v_heater_q=0,
-    v_mzm_left1=ps_vpi/2,  # MZM (left) works at its Maximum transmission points
-    v_mzm_left2=ps_vpi/4,
-    v_mzm_right1=ps_vpi/4,  # MZM (right) works at its Maximum transmission points
-    v_mzm_right2=ps_vpi/2,
+    v_heater_i=0, # The half pi phase shift implements orthogonal modulation
+    v_heater_q=ps_vpi/2,
+    v_mzm_left1=ps_vpi,  # MZM (left) works at its Maximum transmission points
+    v_mzm_left2=0,
+    v_mzm_right1=0,  # MZM (right) works at its Maximum transmission points
+    v_mzm_right2=ps_vpi,
     bit_rate=50e9,
-    n_bytes=2**8,
+    n_bytes=2**10,
     steps_per_bit=2**7,
     center_wavelength=1.55,
+    qam_level=64,
 )
 
 outputs = ["sig_i", "sig_q", "src_in", "out"]

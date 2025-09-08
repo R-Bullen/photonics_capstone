@@ -10,7 +10,7 @@ This script generates several outputs:
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
 
-from custom_components.iq_modulator_design import IQModulator
+from custom_components.iq_modulator_design_new_model import IQModulator
 from simulation_2.iq_mod_scripts.simulation.simulate_iq_mod_PAM4 import simulate_modulation_PAM4, result_modified_PAM4
 
 import numpy as np
@@ -62,7 +62,7 @@ print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 ps_vpi = 0.1 / (200 / 10000)
 print("PS Vpi = %f" % ps_vpi)
 
-cm.bandwidth = 25e9  # Modulator bandwidth (in Hz)
+cm.bandwidth = 500e9  # Modulator bandwidth (in Hz)
 
 num_symbols = 2 ** 8
 samples_per_symbol = 2 ** 7
@@ -75,18 +75,18 @@ bit_rate = 50e9
 
 results = simulate_modulation_PAM4(
     cell=iq_mod,
-    mod_amplitude_i=rf_vpi,
+    mod_amplitude_i=1.0,
     mod_noise_i=0.0,
-    mod_amplitude_q=rf_vpi,
+    mod_amplitude_q=0.5,
     mod_noise_q=0.0,
     opt_amplitude=1.0,
     opt_noise=0.0,
     v_heater_i=0,  # 4-Level Amplitude Modulation, thus no phase shift
     v_heater_q=0,
-    v_mzm_left1=0.0,  # MZM (left) works at its linear biased point
+    v_mzm_left1=ps_vpi/2,  # MZM (left) works at its linear biased point
     v_mzm_left2=0.0,
     v_mzm_right1=0.0,  # MZM (right) works at its linear biased point
-    v_mzm_right2=0.0,
+    v_mzm_right2=ps_vpi/2,
     bit_rate=50e9,
     n_bytes=2**8,
     steps_per_bit=2**7,

@@ -62,7 +62,7 @@ print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 ps_vpi = 0.1 / (200 / 1e4)
 print("PS Vpi = %f" % ps_vpi)
 
-cm.bandwidth = 25e9  # Modulator bandwidth (in Hz)
+cm.bandwidth = 250e9  # Modulator bandwidth (in Hz)
 
 num_symbols = 2 ** 8
 samples_per_symbol = 2 ** 7
@@ -84,9 +84,9 @@ results = simulate_modulation_PAM4(
     v_heater_i=0.0,  # 4-Level Amplitude Modulation, thus no phase shift
     v_heater_q=0.0,
     v_mzm_left1=0.0,  # MZM (left) works at its linear biased point
-    v_mzm_left2=0.0,
+    v_mzm_left2=ps_vpi/2,
     v_mzm_right1=0.0,  # MZM (right) works at its linear biased point
-    v_mzm_right2=0.0,
+    v_mzm_right2=ps_vpi/2,
     bit_rate=50e9,
     n_bytes=2**8,
     steps_per_bit=2**7,

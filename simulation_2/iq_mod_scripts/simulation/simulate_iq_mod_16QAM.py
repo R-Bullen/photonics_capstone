@@ -3,7 +3,7 @@
 """
 Set up a testbench for an IQ modulator working in QAM modulation format.
 """
-
+import math
 import random
 
 import numpy as np
@@ -31,6 +31,7 @@ def simulate_modulation_16QAM(
     steps_per_bit=50,
     center_wavelength=1.5,
     debug=False,
+    qam_level=16,
 ):
     """
     Simulation recipe to simulate an IQ modulator.
@@ -79,17 +80,24 @@ def simulate_modulation_16QAM(
     Dictionary of simulated signals.
 
     """
+    # determine number of rows and columns based on qam level
+    # eg. 32 -> 4 rows and 8 cols
+    # log2(32)/2 -> 2.5
+    # floor(2.5) -> 2 -> 2^3 -> 4
+    # ceil(2.5) -> 3 -> 2^3 -> 8
 
     # Define the excitations with noise on the electrical
-    f_mod_i = random_bitsource(
+    f_mod_i = random_v_source(
         bitrate=bit_rate,
         amplitude=mod_amplitude_i,
         n_bytes=n_bytes,
+        qam_level=2**math.floor(math.log2(qam_level)/2),
     )
-    f_mod_q = random_bitsource(
+    f_mod_q = random_v_source(
         bitrate=bit_rate,
         amplitude=mod_amplitude_q,
         n_bytes=n_bytes,
+        qam_level=2**math.ceil(math.log2(qam_level)/2),
     )
     rand_normal_dist = rand_normal()
     src_in = i3.FunctionExcitation(
@@ -178,8 +186,48 @@ def simulate_modulation_16QAM(
     return results
 
 
-def result_modified_16QAM(result):
-    res_sample = random.sample(list(result["out"]), 1000)
+def result_modified_16QAM(result, samples_per_symbol=2**7, sampling_point=0.5):
+    # res_sample = random.sample(list(result["out"]), 1000)
+    res_sample = result["out"][int(samples_per_symbol * (10 + sampling_point))::samples_per_symbol]
+
     angle_sample = np.mean(np.angle(res_sample))
 
     return [res * np.exp(-1j * angle_sample) for res in res_sample]
+
+def random_v_source(bitrate: float, amplitude: float, n_bytes: int = 100, qam_level=32, seed=None):
+    """Create a random bit source function f(t) with a given bitrate, end time and amplitude.
+
+    Parameters
+    ----------
+    qam_level: should be power of 2
+    bitrate : float
+        Bitrate [bit/s].
+    amplitude : float
+    n_bytes : int
+    seed : int
+        Seed used for random number generation.
+
+    Returns
+    -------
+    f_prbs :
+        PRBS function as a function of time.
+
+    """
+    from numba import njit
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    # ex.   range: 4 -> 2, 16 -> 4,
+    #       divisor: 4 -> 2, 16 -> 3,
+    data = ((np.random.randint(0, qam_level, n_bytes)) / (qam_level - 1)) - 0.5
+
+    @njit()
+    def f_rbs(t):
+        idx = int(t * bitrate)
+        if idx >= n_bytes:
+            idx = n_bytes - 1
+        return amplitude * data[idx]
+
+    return f_rbs
+
