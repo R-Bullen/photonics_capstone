@@ -90,7 +90,7 @@ results = simulate_modulation_16QAM(
     n_bytes=2**10,
     steps_per_bit=2**7,
     center_wavelength=1.55,
-    qam_level=64,
+    qam_level=16,
 )
 
 outputs = ["sig_i", "sig_q", "src_in", "out"]
