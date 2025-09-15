@@ -186,13 +186,16 @@ def simulate_modulation_16QAM(
     return results
 
 
-def result_modified_16QAM(result, samples_per_symbol=2**7, sampling_point=0.5):
+def result_modified_16QAM(result, samples_per_symbol=2**6, sampling_point=0.5):
     # res_sample = random.sample(list(result["out"]), 1000)
     res_sample = result["out"][int(samples_per_symbol * (10 + sampling_point))::samples_per_symbol]
 
     angle_sample = np.mean(np.angle(res_sample))
+    print(angle_sample)
+    print(angle_sample*180.0/math.pi)
 
     return [res * np.exp(-1j * angle_sample) for res in res_sample]
+    # return [res for res in res_sample]
 
 def random_v_source(bitrate: float, amplitude: float, n_bytes: int = 100, qam_level=32, seed=None):
     """Create a random bit source function f(t) with a given bitrate, end time and amplitude.
@@ -220,7 +223,10 @@ def random_v_source(bitrate: float, amplitude: float, n_bytes: int = 100, qam_le
 
     # ex.   range: 4 -> 2, 16 -> 4,
     #       divisor: 4 -> 2, 16 -> 3,
-    data = ((np.random.randint(0, qam_level, n_bytes)) / (qam_level - 1)) - 0.5
+    data = (2*(np.random.randint(0, qam_level, n_bytes)) / (qam_level - 1)) - 1.0
+    print('min:', min(data))
+    print('max:', max(data))
+    # print(data[0:100])
 
     @njit()
     def f_rbs(t):

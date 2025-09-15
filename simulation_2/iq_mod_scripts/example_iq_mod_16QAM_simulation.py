@@ -87,10 +87,10 @@ results = simulate_modulation_16QAM(
     v_mzm_right1=0,  # MZM (right) works at its Maximum transmission points
     v_mzm_right2=ps_vpi,
     bit_rate=50e9,
-    n_bytes=2**10,
-    steps_per_bit=2**7,
+    n_bytes=2**16,
+    steps_per_bit=2**6,
     center_wavelength=1.55,
-    qam_level=16,
+    qam_level=64,
 )
 
 outputs = ["sig_i", "sig_q", "src_in", "out"]
