@@ -199,9 +199,11 @@ def result_modified_16QAM(result):
 
     return [res * np.exp(-1j * angle_sample) for res in res_sample]
 
-def result_modified_QPSK(result):
+def result_modified_QPSK(result, samples_per_symbol=2**7, sampling_point=0.5):
     results_rotation = []
-    res_sample = random.sample(list(result["out"]), 200)
+    # res_sample = random.sample(list(result["out"]), 200)
+    res_sample = result["out"][int(samples_per_symbol * (10 + sampling_point))::samples_per_symbol]
+
     for res in res_sample:
         if np.angle(res) > 0 and np.angle(res) < np.pi / 2:
             results_rotation.append(res * np.exp(1j * (np.pi / 4 - np.angle(res))))
