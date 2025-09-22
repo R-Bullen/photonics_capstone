@@ -75,11 +75,11 @@ bit_rate = 50e9
 results = simulate_modulation_16QAM(
     cell=iq_mod,
     mod_amplitude_i=1.0,
-    mod_noise_i=0.1,
+    mod_noise_i=0.0,
     mod_amplitude_q=1.0,
-    mod_noise_q=0.1,
+    mod_noise_q=0.0,
     opt_amplitude=2.0,
-    opt_noise=0.1,
+    opt_noise=0.0,
     v_heater_i=0, # The half pi phase shift implements orthogonal modulation
     v_heater_q=ps_vpi/2,
     v_mzm_left1=ps_vpi,  # MZM (left) works at its Maximum transmission points
@@ -87,23 +87,24 @@ results = simulate_modulation_16QAM(
     v_mzm_right1=0,  # MZM (right) works at its Maximum transmission points
     v_mzm_right2=ps_vpi,
     bit_rate=50e9,
-    n_bytes=2**15,
+    n_bytes=2**13,
     steps_per_bit=samples_per_symbol,
     center_wavelength=1.55,
     qam_level=16,
 )
 
-outputs = ["sig_i", "sig_q", "src_in", "out"]
+outputs = ["sig_i", "sig_q", "src_in", "out", "out"]
 titles = [
     "RF signal (top)",
     "RF signal (bottom)",
     "Optical input",
     "Optical output",
+    "Output Angle"
     # "Optical output (top)",
     # "Optical output (bottom)",
 ]
-ylabels = ["voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"] #, "amplitude [au]", "amplitude [au]"]
-process = [np.real, np.real, np.abs, np.real] #, np.real, np.real]
+ylabels = ["voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]", "angle"] #, "amplitude [au]", "amplitude [au]"]
+process = [np.real, np.real, np.abs, np.real, np.angle] #, np.real, np.real]
 
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):

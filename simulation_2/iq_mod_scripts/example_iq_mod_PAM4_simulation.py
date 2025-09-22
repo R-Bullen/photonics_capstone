@@ -92,24 +92,28 @@ results = simulate_modulation_PAM4(
     steps_per_bit=2**7,
     center_wavelength=1.55,
 )
-outputs = ["sig_i", "sig_q", "ht_i", "ht_q", "src_in", "out"]
+# outputs = ["sig_i", "sig_q", "ht_i", "ht_q", "src_in", "out", "out"]
+outputs = ["sig_i", "sig_q", "out", "out"]
 titles = [
     "RF signal_i",
     "RF signal_q",
-    "Heater(left) electrical input",
-    "Heater(right) electrical input",
-    "Optical input",
+    # "Heater(left) electrical input",
+    # "Heater(right) electrical input",
+    # "Optical input",
     "Optical output",
+    "Output angle"
 ]
 ylabels = [
     "voltage [V]",
     "voltage [V]",
-    "voltage [V]",
-    "voltage [V]",
+    # "voltage [V]",
+    # "voltage [V]",
+    # "power [W]",
     "power [W]",
-    "power [W]",
+    "angle (radians)"
 ]
-process = [np.real, np.real, np.real, np.real, np.abs, np.abs]
+# process = [np.real, np.real, np.real, np.real, np.abs, np.abs, np.angle]
+process = [np.real, np.real, np.abs, np.angle]
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
