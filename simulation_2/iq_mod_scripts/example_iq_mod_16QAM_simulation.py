@@ -66,20 +66,20 @@ print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 ps_vpi = 0.1 / (200/10000)
 print("PS Vpi = %f" % ps_vpi)
 
-cm.bandwidth = 500e9    # Modulator bandwidth (in Hz)
+cm.bandwidth = 50e9    # Modulator bandwidth (in Hz)
 
 num_symbols = 2**7
-samples_per_symbol = 2**7
+samples_per_symbol = 2**5
 bit_rate = 50e9
 
 results = simulate_modulation_16QAM(
     cell=iq_mod,
     mod_amplitude_i=1.0,
-    mod_noise_i=0.0,
+    mod_noise_i=0.1,
     mod_amplitude_q=1.0,
-    mod_noise_q=0.0,
+    mod_noise_q=0.1,
     opt_amplitude=2.0,
-    opt_noise=0.0,
+    opt_noise=0.1,
     v_heater_i=0, # The half pi phase shift implements orthogonal modulation
     v_heater_q=ps_vpi/2,
     v_mzm_left1=ps_vpi,  # MZM (left) works at its Maximum transmission points
@@ -88,7 +88,7 @@ results = simulate_modulation_16QAM(
     v_mzm_right2=ps_vpi,
     bit_rate=50e9,
     n_bytes=2**15,
-    steps_per_bit=2**6,
+    steps_per_bit=samples_per_symbol,
     center_wavelength=1.55,
     qam_level=16,
 )
@@ -128,7 +128,7 @@ eye.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res = result_modified_16QAM(results )
+res = result_modified_16QAM(results, samples_per_symbol)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)

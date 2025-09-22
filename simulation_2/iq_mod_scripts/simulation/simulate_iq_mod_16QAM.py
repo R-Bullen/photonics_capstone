@@ -186,7 +186,7 @@ def simulate_modulation_16QAM(
     return results
 
 
-def result_modified_16QAM(result, samples_per_symbol=2**6, sampling_point=0.5):
+def result_modified_16QAM(result, samples_per_symbol=2**6, sampling_point=0.95):
     # res_sample = random.sample(list(result["out"]), 1000)
     res_sample = result["out"][int(samples_per_symbol * (10 + sampling_point))::samples_per_symbol]
 
