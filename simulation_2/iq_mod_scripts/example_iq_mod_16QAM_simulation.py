@@ -23,11 +23,11 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=False, delay_at_input=True)
+iq_mod = IQModulator(with_delays=True, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 #
-# lv.visualize(annotate=True)
+lv.visualize(annotate=True)
 
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the quadrature biasing point
@@ -63,31 +63,31 @@ rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; D
 V_half_pi = rf_vpi / 2
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
-ps_vpi = 0.1 / (200/10000)
+ps_vpi = 0.1 / (200/10000) * 2
 print("PS Vpi = %f" % ps_vpi)
 
 cm.bandwidth = 50e9    # Modulator bandwidth (in Hz)
 
-num_symbols = 2**7
-samples_per_symbol = 2**5
+num_symbols = 2**10
+samples_per_symbol = 2**7
 bit_rate = 50e9
 
 results = simulate_modulation_16QAM(
     cell=iq_mod,
-    mod_amplitude_i=1.0,
+    mod_amplitude_i=3.0,
     mod_noise_i=0.0,
-    mod_amplitude_q=1.0,
+    mod_amplitude_q=3.0,
     mod_noise_q=0.0,
     opt_amplitude=2.0,
     opt_noise=0.0,
     v_heater_i=0, # The half pi phase shift implements orthogonal modulation
     v_heater_q=ps_vpi/2,
-    v_mzm_left1=ps_vpi,  # MZM (left) works at its Maximum transmission points
+    v_mzm_left1=0,  # MZM (left) works at its Maximum transmission points
     v_mzm_left2=0,
     v_mzm_right1=0,  # MZM (right) works at its Maximum transmission points
-    v_mzm_right2=ps_vpi,
+    v_mzm_right2=ps_vpi/2,
     bit_rate=50e9,
-    n_bytes=2**13,
+    n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
     center_wavelength=1.55,
     qam_level=16,
@@ -129,7 +129,7 @@ eye.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res = result_modified_16QAM(results, samples_per_symbol)
+res = result_modified_16QAM(results, samples_per_symbol=samples_per_symbol, sampling_point=0.8)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)

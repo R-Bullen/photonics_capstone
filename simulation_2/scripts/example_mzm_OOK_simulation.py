@@ -59,6 +59,8 @@ plt.show()
 rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
+ps_vpi = 0.1 / (200/10000)
+
 cm.bandwidth = 25e9    # Modulator bandwidth (in Hz)
 
 num_symbols = 2**8
@@ -67,12 +69,12 @@ bit_rate = 50e9
 
 results = simulate_modulation_mzm(
     cell=mzm,
-    mod_amplitude=rf_vpi / 2 * 0.8,
+    mod_amplitude=rf_vpi * 0.8,
     mod_noise=0.01,
     opt_amplitude=1.0,
     opt_noise=0.01,
     v_mzm1=0.0,
-    v_mzm2=0.0,
+    v_mzm2=ps_vpi/2,
     bit_rate=bit_rate,
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,

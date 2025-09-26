@@ -183,8 +183,9 @@ def simulate_modulation_16QAM(
     )
     return results
 
-def result_modified_16QAM(result, output=""):
-    res_sample = random.sample(list(result[output]), 1000)
+def result_modified_16QAM(result, output="", samples_per_symbol = 2 ** 6, sampling_point = 0.9):
+    # res_sample = random.sample(list(result["out"]), 1000)
+    res_sample = result[output][int(samples_per_symbol * (10 + sampling_point))::samples_per_symbol]
     angle_sample = np.mean(np.angle(res_sample))
 
     return [res * np.exp(-1j * angle_sample) for res in res_sample]

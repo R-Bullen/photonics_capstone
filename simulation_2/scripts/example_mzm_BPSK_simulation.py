@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-mzm = asp.MZModulator1x1(with_delays=True, delay_at_input=False)
+mzm = asp.MZModulator1x1(with_delays=False, delay_at_input=False)
 
 lv = mzm.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 
@@ -57,6 +57,9 @@ plt.show()
 rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)       # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
+ps_vpi = 0.1 / (200/10000) * 2
+print(ps_vpi)
+
 cm.bandwidth = 25e9    # Modulator bandwidth (in Hz)
 
 num_symbols = 2**8
@@ -70,7 +73,7 @@ results = simulate_modulation_mzm(
     opt_amplitude=1.0,
     opt_noise=0.01,
     v_mzm1= 0,  
-    v_mzm2=0, 
+    v_mzm2=ps_vpi/2,
     bit_rate=bit_rate,
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
@@ -116,6 +119,6 @@ plt.grid()
 plt.xlabel("real", fontsize=14)
 plt.ylabel("imag", fontsize=14)
 plt.title("Constellation diagram", fontsize=14)
-plt.xlim([-1.0, 1.0])
+# plt.xlim([-1.0, 1.0])
 plt.ylim([-1.0, 1.0])
 plt.show()
