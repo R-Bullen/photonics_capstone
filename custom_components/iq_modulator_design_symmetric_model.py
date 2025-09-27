@@ -791,14 +791,20 @@ class IQModulator(i3.PCell):
                                         self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)
 
                 specs += [
+                    i3.Place('top_arm_combiner', (combiner_pos_x, (self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)),
+                    i3.Place('bottom_arm_combiner', (combiner_pos_x_2, -(self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)),
+                    i3.Place('combiner_main', (combiner_pos_x_main, 0)),
 
-                    # main splitter, the input
-                    # TODO make this not hardcoded
-                    # i3.Place('splitter_main:in', (splitter_pos_x_main - 500, 0), relative_to='phase_modulator:middle_ground'),
-                    # i3.Place('bottom_bend:out', bottom_bend_pos),
-                    # # splitters for top and bottom arm
-                    # i3.Place('top_arm_splitter', (splitter_pos_x, (self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)),
-                    # i3.Place('bottom_arm_splitter', (splitter_pos_x_2, -(self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)),
+                    i3.Join([
+                        ("top_arm_combiner:out", "top_output_phase_shifter:in"),
+                        ("bottom_arm_combiner:out", "bottom_output_phase_shifter:in"),
+                    ]),
+                    i3.ConnectBend([
+                        ("top_output_phase_shifter:out", "combiner_main:in1"),
+                        ("bottom_output_phase_shifter:out", "combiner_main:in2"),
+                    ],
+                        bend_radius=self.bend_radius
+                    ),
 
                     # top arm phase shifters
                     i3.Place('top_phase_shifter', (-4*self.bend_radius - self.taper_gap - self.hot_taper_width, top_bend_pos[1]+self.bend_radius*2), relative_to='phase_modulator:top_in'),
@@ -847,14 +853,14 @@ class IQModulator(i3.PCell):
                     #                          ],
                     #
                     #                         bend_radius=self.bend_radius),
-                    # i3.ConnectBend([("phase_modulator:bottom_out", "top_arm_combiner:in1"),
-                    #                          ("phase_modulator:top_out", "top_arm_combiner:in2"),
-                    #                          ("phase_modulator:bottom_out_2", "bottom_arm_combiner:in1"),
-                    #                          ("phase_modulator:top_out_2", "bottom_arm_combiner:in2"),
-                    #                          ],
-                    #                         start_straight=straight_stub_length,
-                    #                         end_straight=straight_stub_length,
-                    #                         bend_radius=self.bend_radius),
+                    i3.ConnectBend([("phase_modulator:bottom_out", "top_arm_combiner:in1"),
+                                             ("phase_modulator:top_out", "top_arm_combiner:in2"),
+                                             ("phase_modulator:bottom_out_2", "bottom_arm_combiner:in1"),
+                                             ("phase_modulator:top_out_2", "bottom_arm_combiner:in2"),
+                                             ],
+                                            start_straight=straight_stub_length,
+                                            end_straight=straight_stub_length,
+                                            bend_radius=self.bend_radius),
                 ]
             # with delays, delay at end
             elif self.with_delays and not self.delay_at_input:
