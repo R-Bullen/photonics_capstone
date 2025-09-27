@@ -19,7 +19,7 @@ from custom_components.iq_modulator_design_symmetric_model import IQModulator
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=True, delay_at_input=True)
+iq_mod = IQModulator(with_delays=False, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 
