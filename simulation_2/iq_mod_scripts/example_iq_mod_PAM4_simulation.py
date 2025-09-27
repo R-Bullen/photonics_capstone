@@ -22,10 +22,10 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=True, delay_at_input=True)
+iq_mod = IQModulator(with_delays=False, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
-lv.visualize(annotate=True)
+#lv.visualize(annotate=True)
 
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the minimum transmission point
@@ -59,10 +59,10 @@ rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)  # VpiL unit is V.cm; Dividin
 V_half_pi = rf_vpi / 2
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
-ps_vpi = 0.1 / (200 / 10000)
+ps_vpi = 0.1 / (200 / 10000) * 2
 print("PS Vpi = %f" % ps_vpi)
 
-cm.bandwidth = 500e9  # Modulator bandwidth (in Hz)
+cm.bandwidth = 50e9  # Modulator bandwidth (in Hz)
 
 num_symbols = 2 ** 9
 samples_per_symbol = 2 ** 9
@@ -75,18 +75,18 @@ bit_rate = 50e9
 
 results = simulate_modulation_PAM4(
     cell=iq_mod,
-    mod_amplitude_i=2.0,
-    mod_noise_i=0.0,
-    mod_amplitude_q=1.0,
-    mod_noise_q=0.0,
+    mod_amplitude_i=2,
+    mod_noise_i=0.2,
+    mod_amplitude_q=1,
+    mod_noise_q=0.1,
     opt_amplitude=1.0,
-    opt_noise=0.0,
+    opt_noise=0.1,
     v_heater_i=0,  # 4-Level Amplitude Modulation, thus no phase shift
-    v_heater_q=ps_vpi/2,
-    v_mzm_left1=0,  # MZM (left) works at its linear biased point
+    v_heater_q=0,
+    v_mzm_left1=ps_vpi/4,  # MZM (left) works at its linear biased point
     v_mzm_left2=0.0,
     v_mzm_right1=0.0,  # MZM (right) works at its linear biased point
-    v_mzm_right2=3*ps_vpi/2,
+    v_mzm_right2=ps_vpi/4,
     bit_rate=bit_rate,
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
