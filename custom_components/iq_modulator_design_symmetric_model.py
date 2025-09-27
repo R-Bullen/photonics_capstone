@@ -824,13 +824,19 @@ class IQModulator(i3.PCell):
                     i3.Join('top_arm_splitter:out2', 'top_bend:in'),
                     i3.Join('top_arm_splitter:out1', 'bottom_bend:in'),
 
+                    i3.Place.X('bottom_arm_splitter', -self.bend_radius*2, relative_to='bottom_phase_shifter_2'),
+                    i3.Place.Y('bottom_arm_splitter', -(top_bend_pos[1] + self.bend_radius * 2 + (self.hot_width + self.electrode_gap * 2 + self.centre_width)/2)),
+                    i3.ConnectBend('bottom_arm_splitter:out2', 'top_phase_shifter_2:in'),
+                    i3.ConnectBend('bottom_arm_splitter:out1', 'bottom_phase_shifter_2:in'),
 
-                    #
-                    # i3.ConnectManhattan([("splitter_main:out1", "top_arm_splitter:in")],
-                    #                     bend_radius=self.bend_radius),
-                    # i3.ConnectManhattan([("splitter_main:out2", "bottom_arm_splitter:in")],
-                    #                     # control_points=[i3.H(-2 * self.bend_radius - 5, relative_to="bottom_arm_splitter:in")],
-                    #                     bend_radius=self.bend_radius),
+                    i3.Place.X('splitter_main:in', -self.bend_radius*3, relative_to='top_arm_splitter:in'),
+                    i3.Place.Y('splitter_main:in', 0),
+                    i3.FlipV('splitter_main'),
+
+                    i3.ConnectManhattan([("top_arm_splitter:in", "splitter_main:out1")],
+                                        bend_radius=self.bend_radius),
+                    i3.ConnectManhattan([("bottom_arm_splitter:in", "splitter_main:out2")],
+                                        bend_radius=self.bend_radius),
                     #
                     # i3.ConnectBend([("top_arm_splitter:out1", "bottom_bend:in"),
                     #                          ("top_arm_splitter:out2", "top_bend:in"),
