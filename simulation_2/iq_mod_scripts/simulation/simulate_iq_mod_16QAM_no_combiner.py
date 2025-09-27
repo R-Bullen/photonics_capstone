@@ -3,7 +3,7 @@
 """
 Set up a testbench for an IQ modulator working in QAM modulation format.
 """
-
+import math
 import random
 
 import numpy as np
@@ -31,6 +31,7 @@ def simulate_modulation_16QAM(
     steps_per_bit=50,
     center_wavelength=1.5,
     debug=False,
+    qam_level=16,
 ):
     """
     Simulation recipe to simulate an IQ modulator.
@@ -81,22 +82,24 @@ def simulate_modulation_16QAM(
     """
 
     # Define the excitations with noise on the electrical
-    f_mod_i = random_bitsource(
+    f_mod_i = random_v_source(
         bitrate=bit_rate,
         amplitude=mod_amplitude_i,
         n_bytes=n_bytes,
+        qam_level=2 ** math.floor(math.log2(qam_level) / 2),
     )
-    f_mod_q = random_bitsource(
+    f_mod_q = random_v_source(
         bitrate=bit_rate,
         amplitude=mod_amplitude_q,
         n_bytes=n_bytes,
+        qam_level=2 ** math.ceil(math.log2(qam_level) / 2),
     )
     rand_normal_dist = rand_normal()
 
-    src_in = i3.FunctionExcitation(port_domain=i3.OpticalDomain, excitation_function=lambda t: opt_amplitude)
+    src_in = i3.FunctionExcitation(port_domain=i3.OpticalDomain, excitation_function=lambda t: opt_amplitude + rand_normal_dist(opt_noise))
 
-    signal_i = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_i(t))
-    signal_q = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_q(t))
+    signal_i = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_i(t) + rand_normal_dist(mod_noise_i))
+    signal_q = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_q(t) + rand_normal_dist(mod_noise_q))
 
     heater_i = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_i)
     heater_q = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_q)
@@ -189,3 +192,45 @@ def result_modified_16QAM(result, output="", samples_per_symbol = 2 ** 6, sampli
     angle_sample = np.mean(np.angle(res_sample))
 
     return [res * np.exp(-1j * angle_sample) for res in res_sample]
+
+
+def random_v_source(bitrate: float, amplitude: float, n_bytes: int = 100, qam_level=32, seed=None):
+    """Create a random bit source function f(t) with a given bitrate, end time and amplitude.
+
+    Parameters
+    ----------
+    qam_level: should be power of 2
+    bitrate : float
+        Bitrate [bit/s].
+    amplitude : float
+    n_bytes : int
+    seed : int
+        Seed used for random number generation.
+
+    Returns
+    -------
+    f_prbs :
+        PRBS function as a function of time.
+
+    """
+    from numba import njit
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    # ex.   range: 4 -> 2, 16 -> 4,
+    #       divisor: 4 -> 2, 16 -> 3,
+    data = (2*(np.random.randint(0, qam_level, n_bytes)) / (qam_level - 1)) - 1.0
+    print('min:', min(data))
+    print('max:', max(data))
+    # print(data[0:100])
+
+    @njit()
+    def f_rbs(t):
+        idx = int(t * bitrate)
+        if idx >= n_bytes:
+            idx = n_bytes - 1
+        return amplitude * data[idx]
+
+    return f_rbs
+
