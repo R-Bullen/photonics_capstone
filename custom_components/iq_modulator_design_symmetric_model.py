@@ -791,9 +791,11 @@ class IQModulator(i3.PCell):
                                         self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)
 
                 specs += [
+                    # back half (combiners + phase shifters)
                     i3.Place('top_arm_combiner', (combiner_pos_x, (self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)),
                     i3.Place('bottom_arm_combiner', (combiner_pos_x_2, -(self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)),
                     i3.Place('combiner_main', (combiner_pos_x_main, 0)),
+                    i3.FlipV('combiner_main'),
 
                     i3.Join([
                         ("top_arm_combiner:out", "top_output_phase_shifter:in"),
@@ -816,8 +818,8 @@ class IQModulator(i3.PCell):
                                         bend_radius=self.bend_radius),
 
                     # bottom arm phase shifters
-                    i3.Place('top_phase_shifter_2', (-4*self.bend_radius - self.taper_gap - self.hot_taper_width, -(top_bend_pos[1]+self.bend_radius*2)), relative_to='phase_modulator:top_in_2'),
-                    i3.Place('bottom_phase_shifter_2', (-4*self.bend_radius - self.taper_gap - self.hot_taper_width, -(top_bend_pos[1]+self.bend_radius*2)), relative_to='phase_modulator:bottom_in_2'),
+                    i3.Place('top_phase_shifter_2', (-4*self.bend_radius - self.taper_gap - self.hot_taper_width, -(bottom_bend_pos[1]+self.bend_radius*2)), relative_to='phase_modulator:top_in_2'),
+                    i3.Place('bottom_phase_shifter_2', (-4*self.bend_radius - self.taper_gap - self.hot_taper_width, -(bottom_bend_pos[1]+self.bend_radius*2)), relative_to='phase_modulator:bottom_in_2'),
                     i3.FlipV('bottom_phase_shifter_2'),
                     i3.ConnectManhattan([("phase_modulator:top_in_2", "top_phase_shifter_2:out")],
                                         bend_radius=self.bend_radius),
@@ -843,16 +845,7 @@ class IQModulator(i3.PCell):
                                         bend_radius=self.bend_radius),
                     i3.ConnectManhattan([("bottom_arm_splitter:in", "splitter_main:out2")],
                                         bend_radius=self.bend_radius),
-                    #
-                    # i3.ConnectBend([("top_arm_splitter:out1", "bottom_bend:in"),
-                    #                          ("top_arm_splitter:out2", "top_bend:in"),
-                    #                          ("bottom_arm_splitter:out1", "bottom_phase_shifter_2:in"),
-                    #                          ("bottom_arm_splitter:out2", "top_phase_shifter_2:in"),
-                    #                          ("bottom_bend:out", "bottom_phase_shifter:in"),
-                    #                          ("top_bend:out", "top_phase_shifter:in"),
-                    #                          ],
-                    #
-                    #                         bend_radius=self.bend_radius),
+
                     i3.ConnectBend([("phase_modulator:bottom_out", "top_arm_combiner:in1"),
                                              ("phase_modulator:top_out", "top_arm_combiner:in2"),
                                              ("phase_modulator:bottom_out_2", "bottom_arm_combiner:in1"),
@@ -873,11 +866,66 @@ class IQModulator(i3.PCell):
             # no delay
             else:
                 specs += [
+                    # back half, combiners and phase shifters
+                    i3.Place('top_arm_combiner',
+                             (combiner_pos_x, (self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)),
+                    i3.Place('bottom_arm_combiner',
+                             (combiner_pos_x_2, -(self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)),
+                    i3.Place('combiner_main', (combiner_pos_x_main, 0)),
+                    i3.FlipV('combiner_main'),
+
+                    i3.Join([
+                        ("top_arm_combiner:out", "top_output_phase_shifter:in"),
+                        ("bottom_arm_combiner:out", "bottom_output_phase_shifter:in"),
+                    ]),
+                    i3.ConnectBend([
+                        ("top_output_phase_shifter:out", "combiner_main:in1"),
+                        ("bottom_output_phase_shifter:out", "combiner_main:in2")],
+                        bend_radius=self.bend_radius),
+                    i3.ConnectBend([("phase_modulator:bottom_out", "top_arm_combiner:in1"),
+                                    ("phase_modulator:top_out", "top_arm_combiner:in2"),
+                                    ("phase_modulator:bottom_out_2", "bottom_arm_combiner:in1"),
+                                    ("phase_modulator:top_out_2", "bottom_arm_combiner:in2"),
+                                    ],
+                                   start_straight=straight_stub_length,
+                                   end_straight=straight_stub_length,
+                                   bend_radius=self.bend_radius),
+
                     i3.Place('splitter_main', (splitter_pos_x_main, 0)),
+                    i3.FlipV('splitter_main'),
+
                     i3.ConnectBend([
                         ("splitter_main:out1", "top_arm_splitter:in"),
                         ("splitter_main:out2", "bottom_arm_splitter:in")],
-                        bend_radius=self.bend_radius)
+                        bend_radius=self.bend_radius),
+
+                    i3.Place('top_phase_shifter', (phase_shifter_pos_x, self.phase_modulator.ports['top_in'].position[1])),
+                    i3.Place('bottom_phase_shifter', (phase_shifter_pos_x, self.phase_modulator.ports['bottom_in'].position[1])),
+                    i3.FlipV('bottom_phase_shifter'),
+                    i3.Place('bottom_phase_shifter_2', (phase_shifter_pos_x, -self.phase_modulator.ports['top_in'].position[1])),
+                    i3.Place('top_phase_shifter_2', (phase_shifter_pos_x, -self.phase_modulator.ports['bottom_in'].position[1])),
+                    i3.FlipV('bottom_phase_shifter_2'),
+
+                    # splitters for top and bottom arm
+                    i3.Place('top_arm_splitter', (splitter_pos_x, (self.hot_width + self.electrode_gap * 2 + self.centre_width)/2)),
+                    i3.Place('bottom_arm_splitter', (splitter_pos_x_2, -(self.hot_width + self.electrode_gap * 2 + self.centre_width)/2)),
+
+                    i3.ConnectBend([
+                        ("bottom_phase_shifter:out", "phase_modulator:bottom_in"),
+                        ("top_phase_shifter:out", "phase_modulator:top_in"),
+                        ("bottom_phase_shifter_2:out", "phase_modulator:bottom_in_2"),
+                        ("top_phase_shifter_2:out", "phase_modulator:top_in_2"),
+                        ],
+                        bend_radius=self.bend_radius
+                    ),
+                    i3.ConnectBend([
+                        ("bottom_phase_shifter:in", "top_arm_splitter:out1"),
+                        ("top_phase_shifter:in", "top_arm_splitter:out2"),
+                        ("bottom_phase_shifter_2:in", "bottom_arm_splitter:out1"),
+                        ("top_phase_shifter_2:in", "bottom_arm_splitter:out2"),
+                    ],
+                        bend_radius=self.bend_radius
+                    ),
                 ]
 
             if self.with_delays:
@@ -910,18 +958,19 @@ class IQModulator(i3.PCell):
                 # specs.append(i3.Place('top_bend', top_bend_pos))
 
             else:
-                specs.append(i3.ConnectBend([("rop_arm_splitter:out1", "bottom_phase_shifter:in"),
-                                             ("top_arm_splitter:out2", "top_phase_shifter:in"),
-                                             ("bottom_arm_splitter:out1", "bottom_phase_shifter_2:in"),
-                                             ("bottom_arm_splitter:out2", "top_phase_shifter_2:in"),
-                                             ("phase_modulator:bottom_out", "top_arm_combiner:in1"),
-                                             ("phase_modulator:top_out", "top_arm_combiner:in2"),
-                                             ("phase_modulator:bottom_out_2", "bottom_arm_combiner:in1"),
-                                             ("phase_modulator:top_out_2", "bottom_arm_combiner:in2"),
-                                             ],
-                                            start_straight=straight_stub_length,
-                                            end_straight=straight_stub_length,
-                                            bend_radius=self.bend_radius))
+                pass
+                # specs.append(i3.ConnectBend([("top_arm_splitter:out1", "bottom_phase_shifter:in"),
+                #                              ("top_arm_splitter:out2", "top_phase_shifter:in"),
+                #                              ("bottom_arm_splitter:out1", "bottom_phase_shifter_2:in"),
+                #                              ("bottom_arm_splitter:out2", "top_phase_shifter_2:in"),
+                #                              ("phase_modulator:bottom_out", "top_arm_combiner:in1"),
+                #                              ("phase_modulator:top_out", "top_arm_combiner:in2"),
+                #                              ("phase_modulator:bottom_out_2", "bottom_arm_combiner:in1"),
+                #                              ("phase_modulator:top_out_2", "bottom_arm_combiner:in2"),
+                #                              ],
+                #                             start_straight=straight_stub_length,
+                #                             end_straight=straight_stub_length,
+                #                             bend_radius=self.bend_radius))
 
             insts += i3.place_and_route(instances, specs=specs)
 
