@@ -824,7 +824,6 @@ class IQModulator(i3.PCell):
                     i3.Join('top_arm_splitter:out2', 'top_bend:in'),
                     i3.Join('top_arm_splitter:out1', 'bottom_bend:in'),
 
-                    i3.Place('bottom_arm_splitter:in', '')
 
                     #
                     # i3.ConnectManhattan([("splitter_main:out1", "top_arm_splitter:in")],
