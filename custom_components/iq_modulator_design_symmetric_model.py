@@ -121,16 +121,14 @@ class CustomPushPullModulatorModel(CompactModel):
 
         # Top Arm
         loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
-        phase = 2 * np.pi / env.wavelength * (
-                    neff * parameters.top_wg_length + dn_dv * y['voltage_1'] * parameters.electrode_length)
+        phase = 2 * np.pi / env.wavelength * (neff * parameters.top_wg_length + dn_dv * y['voltage_1'] * parameters.electrode_length)
         delay = parameters.top_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
         a = loss * np.exp(1j * phase)
         output_signals['top_out'] = a * input_signals['top_in', t - delay]
         output_signals['top_in'] = a * input_signals['top_out', t - delay]
 
         loss = 10 ** (-parameters.loss_dB_m * parameters.bottom_wg_length * 1e-6 / 20.0)
-        phase = 2 * np.pi / env.wavelength * (
-                    neff * parameters.bottom_wg_length - dn_dv * y['voltage_2'] * parameters.electrode_length)
+        phase = 2 * np.pi / env.wavelength * (neff * parameters.bottom_wg_length - dn_dv * y['voltage_2'] * parameters.electrode_length)
         delay = parameters.bottom_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
         a = loss * np.exp(1j * phase)
         output_signals['bottom_out'] = a * input_signals['bottom_in', t - delay]
@@ -139,8 +137,7 @@ class CustomPushPullModulatorModel(CompactModel):
 
         # Bottom Arm
         loss = 10 ** (-parameters.loss_dB_m * parameters.top_wg_length * 1e-6 / 20.0)
-        phase = 2 * np.pi / env.wavelength * (
-                    neff * parameters.top_wg_length + dn_dv * y['voltage_3'] * parameters.electrode_length)
+        phase = 2 * np.pi / env.wavelength * (neff * parameters.top_wg_length + dn_dv * y['voltage_3'] * parameters.electrode_length)
         delay = parameters.top_wg_length * 1e-6 / (speed_of_light / parameters.n_g)  # Convert length from um to m
         a = loss * np.exp(1j * phase)
         output_signals['top_out_2'] = a * input_signals['top_in_2', t - delay]
@@ -796,6 +793,7 @@ class IQModulator(i3.PCell):
                     i3.Place('bottom_arm_combiner', (combiner_pos_x_2, -(self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)),
                     i3.Place('combiner_main', (combiner_pos_x_main, 0)),
                     i3.FlipV('combiner_main'),
+                    i3.FlipV('bottom_output_phase_shifter'),
 
                     i3.Join([
                         ("top_arm_combiner:out", "top_output_phase_shifter:in"),
@@ -873,6 +871,7 @@ class IQModulator(i3.PCell):
                              (combiner_pos_x_2, -(self.hot_width + self.electrode_gap * 2 + self.centre_width) / 2)),
                     i3.Place('combiner_main', (combiner_pos_x_main, 0)),
                     i3.FlipV('combiner_main'),
+                    i3.FlipV('bottom_output_phase_shifter'),
 
                     i3.Join([
                         ("top_arm_combiner:out", "top_output_phase_shifter:in"),
@@ -881,7 +880,8 @@ class IQModulator(i3.PCell):
                     i3.ConnectBend([
                         ("top_output_phase_shifter:out", "combiner_main:in1"),
                         ("bottom_output_phase_shifter:out", "combiner_main:in2")],
-                        bend_radius=self.bend_radius),
+                        bend_radius=self.bend_radius
+                    ),
                     i3.ConnectBend([("phase_modulator:bottom_out", "top_arm_combiner:in1"),
                                     ("phase_modulator:top_out", "top_arm_combiner:in2"),
                                     ("phase_modulator:bottom_out_2", "bottom_arm_combiner:in1"),
