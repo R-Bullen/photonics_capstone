@@ -83,13 +83,13 @@ results = simulate_modulation_16QAM(
 
     # Output Heaters
     v_heater_i=0.0,
-    v_heater_q=0.0,
+    v_heater_q=ps_vpi/4,
 
     # WG Heaters
     v_mzm_left1=ps_vpi/4,    # Top Arm - Top PS
     v_mzm_left2=0.0,    # Top Arm - Bottom PS
-    v_mzm_right1=ps_vpi/4,   # Bottom Arm - Top PS
-    v_mzm_right2=0.0,   # Bottom Arm - Bottom PS
+    v_mzm_right1=0.0,   # Bottom Arm - Top PS
+    v_mzm_right2=ps_vpi/4,   # Bottom Arm - Bottom PS
 
     bit_rate=50e9,
     n_bytes=2**8,

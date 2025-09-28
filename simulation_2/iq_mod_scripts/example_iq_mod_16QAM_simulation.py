@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=True, delay_at_input=True)
+iq_mod = IQModulator(with_delays=False, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 #
@@ -74,15 +74,15 @@ bit_rate = 50e9
 
 results = simulate_modulation_16QAM(
     cell=iq_mod,
-    mod_amplitude_i=3.0,
+    mod_amplitude_i=rf_vpi/2,
     mod_noise_i=0.0,
-    mod_amplitude_q=3.0,
+    mod_amplitude_q=rf_vpi/2,
     mod_noise_q=0.0,
     opt_amplitude=2.0,
     opt_noise=0.0,
     v_heater_i=0, # The half pi phase shift implements orthogonal modulation
-    v_heater_q=ps_vpi/2,
-    v_mzm_left1=0,  # MZM (left) works at its Maximum transmission points
+    v_heater_q=ps_vpi/4,
+    v_mzm_left1=ps_vpi/2,  # MZM (left) works at its Maximum transmission points
     v_mzm_left2=0,
     v_mzm_right1=0,  # MZM (right) works at its Maximum transmission points
     v_mzm_right2=ps_vpi/2,

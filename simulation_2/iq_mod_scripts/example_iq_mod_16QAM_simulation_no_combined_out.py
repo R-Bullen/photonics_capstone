@@ -61,7 +61,7 @@ rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; D
 V_half_pi = rf_vpi / 2
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
-ps_vpi = 0.1 / (200/10000)
+ps_vpi = 0.1 / (200/10000) * 2
 print("PS Vpi = %f" % ps_vpi)
 
 cm.bandwidth = 100e9    # Modulator bandwidth (in Hz)
