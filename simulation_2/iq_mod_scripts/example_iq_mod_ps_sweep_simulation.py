@@ -10,7 +10,7 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from custom_components.iq_modulator_design_new_model import IQModulator
+from custom_components.iq_modulator_design_symmetric_model import IQModulator
 from simulation_2.iq_mod_scripts.simulation.simulate_iq_mod_ps_sweep import simulate_modulation_ps_sweep
 
 import numpy as np
@@ -101,7 +101,7 @@ results = simulate_modulation_ps_sweep(
     opt_amplitude=2.0,
     opt_noise=0.0,
     v_heater_i=0, # The half pi phase shift implements orthogonal modulation
-    v_heater_q=ps_vpi/2,
+    v_heater_q=0,
     v_mzm_left1=0,
     v_mzm_left2=0,
     v_mzm_right1=0,
@@ -110,7 +110,6 @@ results = simulate_modulation_ps_sweep(
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
     center_wavelength=1.55195,
-    qam_level=16,
 )
 
 # outputs = ["sig_i", "sig_q", "ht_q", "src_in", "out", "out"]

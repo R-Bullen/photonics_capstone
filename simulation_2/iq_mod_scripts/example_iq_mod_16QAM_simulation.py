@@ -82,16 +82,19 @@ results = simulate_modulation_16QAM(
     mod_noise_q=0.0,
     opt_amplitude=2.0,
     opt_noise=0.0,
-    v_heater_i=0, # The half pi phase shift implements orthogonal modulation
-    v_heater_q=1.5542521994134897,
-    v_mzm_left1=0,
+    v_heater_i=0,
+    # v_heater_q=ps_vpi/2, # for no-delay
+    v_heater_q=1.5542521994134897, # for with-delay
+    # v_mzm_left1=ps_vpi, # for no-delay
+    v_mzm_left1=0, # for with-delay
     v_mzm_left2=0,
     v_mzm_right1=0,
     v_mzm_right2=ps_vpi,
     bit_rate=50e9,
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
-    center_wavelength=1.55195,
+    center_wavelength=1.55195, # for with-delay
+    # center_wavelength=1.55, # for no-delay
     qam_level=16,
 )
 

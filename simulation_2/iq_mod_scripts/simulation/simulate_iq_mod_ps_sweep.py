@@ -31,7 +31,6 @@ def simulate_modulation_ps_sweep(
     steps_per_bit=50,
     center_wavelength=1.5,
     debug=False,
-    qam_level=16,
     start_v=0,
     end_v=10,
 ):
@@ -82,34 +81,17 @@ def simulate_modulation_ps_sweep(
     Dictionary of simulated signals.
 
     """
-    # determine number of rows and columns based on qam level
-    # eg. 32 -> 4 rows and 8 cols
-    # log2(32)/2 -> 2.5
-    # floor(2.5) -> 2 -> 2^3 -> 4
-    # ceil(2.5) -> 3 -> 2^3 -> 8
 
     # Define the excitations with noise on the electrical
-    f_mod_i = random_v_source(
-        bitrate=bit_rate,
-        amplitude=mod_amplitude_i,
-        n_bytes=n_bytes,
-        qam_level=2**math.floor(math.log2(qam_level)/2),
-    )
-    f_mod_q = random_v_source(
-        bitrate=bit_rate,
-        amplitude=mod_amplitude_q,
-        n_bytes=n_bytes,
-        qam_level=2**math.ceil(math.log2(qam_level)/2),
-    )
     rand_normal_dist = rand_normal()
     src_in = i3.FunctionExcitation(
         port_domain=i3.OpticalDomain, excitation_function=lambda t: opt_amplitude + rand_normal_dist(opt_noise)
     )
     signal_i = i3.FunctionExcitation(
-        port_domain=i3.ElectricalDomain, excitation_function=lambda t: mod_amplitude_i #f_mod_i(t) + rand_normal_dist(mod_noise_i)
+        port_domain=i3.ElectricalDomain, excitation_function=lambda t: mod_amplitude_i
     )
     signal_q = i3.FunctionExcitation(
-        port_domain=i3.ElectricalDomain, excitation_function=lambda t: mod_amplitude_i #f_mod_q(t) + rand_normal_dist(mod_noise_q)
+        port_domain=i3.ElectricalDomain, excitation_function=lambda t: mod_amplitude_i
     )
 
     v_heater_q = linear_v_source(bitrate=bit_rate, start_v=start_v, end_v=end_v)
@@ -189,59 +171,6 @@ def simulate_modulation_ps_sweep(
         debug=debug,
     )
     return results
-
-
-
-def result_modified_16QAM(result, samples_per_symbol=2**6, sampling_point=0.9):
-    # res_sample = random.sample(list(result["out"]), 1000)
-    res_sample = result["out"][int(samples_per_symbol * (10 + sampling_point))::samples_per_symbol]
-
-    angle_sample = np.mean(np.angle(res_sample))
-    print(angle_sample)
-    print(angle_sample*180.0/math.pi)
-
-    return [res * np.exp(-1j * angle_sample) for res in res_sample]
-    # return [res for res in res_sample]
-
-def random_v_source(bitrate: float, amplitude: float, n_bytes: int = 100, qam_level=32, seed=None):
-    """Create a random bit source function f(t) with a given bitrate, end time and amplitude.
-
-    Parameters
-    ----------
-    qam_level: should be power of 2
-    bitrate : float
-        Bitrate [bit/s].
-    amplitude : float
-    n_bytes : int
-    seed : int
-        Seed used for random number generation.
-
-    Returns
-    -------
-    f_prbs :
-        PRBS function as a function of time.
-
-    """
-    from numba import njit
-
-    if seed is not None:
-        np.random.seed(seed)
-
-    # ex.   range: 4 -> 2, 16 -> 4,
-    #       divisor: 4 -> 2, 16 -> 3,
-    data = (2*(np.random.randint(0, qam_level, n_bytes)) / (qam_level - 1)) - 1.0
-    print('min:', min(data))
-    print('max:', max(data))
-    # print(data[0:100])
-
-    @njit()
-    def f_rbs(t):
-        idx = int(t * bitrate)
-        if idx >= n_bytes:
-            idx = n_bytes - 1
-        return amplitude * data[idx]
-
-    return f_rbs
 
 def linear_v_source(bitrate: float, n_bytes: int = 2**10, start_v=0, end_v=10):
     from numba import njit

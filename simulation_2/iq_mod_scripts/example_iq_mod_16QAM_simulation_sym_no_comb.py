@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=False, delay_at_input=True)
+iq_mod = IQModulator(with_delays=True, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 lv.visualize(annotate=True)
@@ -42,15 +42,18 @@ idx_max = np.argmax(np.abs(np.abs(S['top_out', 'in'])**2))
 wl = wavelengths[int((idx_min + idx_max) / 2)]
 print("Quadrature wavelength: {}".format(wl))
 
-# plt.figure()
-# plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
-# plt.plot([wl*1e3, wl*1e3], [0, 1])
-# plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
-# plt.xlabel("Wavelength [nm]")
-# plt.ylabel("Transmission [au]")
-# plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
-# plt.ylim(0, 1)
-# plt.show()
+wl = wavelengths[int(idx_min)]
+print("Min transmission wavelength: {}".format(wl))
+
+plt.figure()
+plt.plot(wavelengths * 1e3, np.abs(S['top_out', 'in'])**2)
+plt.plot([wl*1e3, wl*1e3], [0, 1])
+plt.plot(wavelengths * 1e3, [np.abs(S['top_out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
+plt.xlabel("Wavelength [nm]")
+plt.ylabel("Transmission [au]")
+plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
+plt.ylim(0, 1)
+plt.show()
 
 ########################################################################################################################
 # Simulation of a MZM working in OOK modulation format.
@@ -64,7 +67,6 @@ print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
 
 ps_vpi = 0.1 / (200/10000)
-ps_vpi = 2*ps_vpi
 print("PS Vpi = %f" % ps_vpi)
 
 cm.bandwidth = 100e9    # Modulator bandwidth (in Hz)
