@@ -22,10 +22,10 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=False, delay_at_input=True)
+iq_mod = IQModulator(with_delays=True, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
-#lv.visualize(annotate=True)
+lv.visualize(annotate=True)
 
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the quadrature biasing point
@@ -41,15 +41,19 @@ idx_max = np.argmax(np.abs(np.abs(S['top_out', 'in'])**2))
 wl = wavelengths[int((idx_min + idx_max) / 2)]
 print("Quadrature wavelength: {}".format(wl))
 
-# plt.figure()
-# plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
-# plt.plot([wl*1e3, wl*1e3], [0, 1])
-# plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
-# plt.xlabel("Wavelength [nm]")
-# plt.ylabel("Transmission [au]")
-# plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
-# plt.ylim(0, 1)
-# plt.show()
+wl = wavelengths[int(idx_max)]
+print("Max wavelength: {}".format(wl))
+
+plt.figure()
+plt.plot(wavelengths * 1e3, np.abs(S['top_out', 'in'])**2)
+plt.plot([wl*1e3, wl*1e3], [0, 1])
+# plt.plot(wavelengths * 1e3, [np.abs(S['top_out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
+plt.plot(wavelengths * 1e3, [np.abs(S['top_out', 'in'][int(idx_max)])**2 for x in wavelengths])
+plt.xlabel("Wavelength [nm]")
+plt.ylabel("Transmission [au]")
+plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
+plt.ylim(0, 1)
+plt.show()
 
 ########################################################################################################################
 # Simulation of a MZM working in OOK modulation format.
@@ -61,12 +65,12 @@ rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; D
 V_half_pi = rf_vpi / 2
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
-ps_vpi = 0.1 / (200/10000) * 2
+ps_vpi = 0.1 / (200/10000)
 print("PS Vpi = %f" % ps_vpi)
 
 cm.bandwidth = 100e9    # Modulator bandwidth (in Hz)
 
-num_symbols = 2**7
+num_symbols = 2**10
 samples_per_symbol = 2**7
 bit_rate = 50e9
 
@@ -81,18 +85,18 @@ results = simulate_modulation_16QAM(
 
     # Output Heaters
     v_heater_i=0.0,
-    v_heater_q=ps_vpi/4,
+    v_heater_q=ps_vpi/2,
 
     # WG Heaters
-    v_mzm_left1=ps_vpi/2,    # Top Arm - Top PS
+    v_mzm_left1=ps_vpi,    # Top Arm - Top PS
     v_mzm_left2=0.0,    # Top Arm - Bottom PS
-    v_mzm_right1=ps_vpi/2,   # Bottom Arm - Top PS
+    v_mzm_right1=ps_vpi,   # Bottom Arm - Top PS
     v_mzm_right2=0.0,   # Bottom Arm - Bottom PS
 
     bit_rate=50e9,
-    n_bytes=2**8,
-    steps_per_bit=2**7,
-    center_wavelength=1.55,
+    n_bytes=num_symbols,
+    steps_per_bit=samples_per_symbol,
+    center_wavelength=float(wl),
 )
 
 outputs = ["sig_i", "sig_q","src_in", "top_out", "bottom_out"]
@@ -140,8 +144,8 @@ eye_bottom.visualize(show=False, title="Bottom Eye Diagram")
 ########################################################################################################################
 
 plt.figure(4)
-res_top = result_modified_16QAM(results, "top_out")
-res_bottom = result_modified_16QAM(results, "bottom_out")
+res_top = result_modified_16QAM(results, "top_out", samples_per_symbol=samples_per_symbol, sampling_point=0.8)
+res_bottom = result_modified_16QAM(results, "bottom_out", samples_per_symbol=samples_per_symbol, sampling_point=0.8)
 plt.subplot(1,2,1)
 plt.scatter(np.real(res_top), np.imag(res_top), marker="+", linewidths=10, alpha=0.1)
 plt.grid()

@@ -29,13 +29,15 @@ lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_ga
 #
 lv.visualize(annotate=True)
 
+# lv.to_canvas()
+
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the quadrature biasing point
 ########################################################################################################################
 
 cm = iq_mod.CircuitModel()
 
-wavelengths = np.linspace(1.55, 1.555, 101)
+wavelengths = np.linspace(1.549, 1.555, 101)
 S = cm.get_smatrix(wavelengths=wavelengths)
 
 idx_min = np.argmin(np.abs(np.abs(S['out', 'in'])**2))
@@ -43,15 +45,15 @@ idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
 wl = wavelengths[int((idx_min + idx_max) / 2)]
 print("Quadrature wavelength: {}".format(wl))
 
-# plt.figure()
-# plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
-# plt.plot([wl*1e3, wl*1e3], [0, 1])
-# plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
-# plt.xlabel("Wavelength [nm]")
-# plt.ylabel("Transmission [au]")
-# plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
-# plt.ylim(0, 1)
-# plt.show()
+plt.figure()
+plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
+plt.plot([wl*1e3, wl*1e3], [0, 1])
+plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
+plt.xlabel("Wavelength [nm]")
+plt.ylabel("Transmission [au]")
+plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
+plt.ylim(0, 1)
+plt.show()
 
 ########################################################################################################################
 # Simulation of a MZM working in OOK modulation format.
@@ -63,7 +65,7 @@ rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; D
 V_half_pi = rf_vpi / 2
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
-ps_vpi = 0.1 / (200/10000) * 2
+ps_vpi = 0.1 / (200/10000)
 print("PS Vpi = %f" % ps_vpi)
 
 cm.bandwidth = 50e9    # Modulator bandwidth (in Hz)
@@ -81,11 +83,11 @@ results = simulate_modulation_16QAM(
     opt_amplitude=2.0,
     opt_noise=0.0,
     v_heater_i=0, # The half pi phase shift implements orthogonal modulation
-    v_heater_q=ps_vpi/4,
-    v_mzm_left1=ps_vpi/2,  # MZM (left) works at its Maximum transmission points
+    v_heater_q=ps_vpi/2,
+    v_mzm_left1=ps_vpi,
     v_mzm_left2=0,
-    v_mzm_right1=0,  # MZM (right) works at its Maximum transmission points
-    v_mzm_right2=ps_vpi/2,
+    v_mzm_right1=0,
+    v_mzm_right2=ps_vpi,
     bit_rate=50e9,
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
