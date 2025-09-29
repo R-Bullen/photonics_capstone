@@ -41,14 +41,14 @@ idx_max = np.argmax(np.abs(np.abs(S['top_out', 'in'])**2))
 wl = wavelengths[int((idx_min + idx_max) / 2)]
 print("Quadrature wavelength: {}".format(wl))
 
-wl = wavelengths[int(idx_max)]
-print("Max wavelength: {}".format(wl))
+wl = wavelengths[int(idx_min)]
+print("Min transmission wavelength: {}".format(wl))
 
 plt.figure()
 plt.plot(wavelengths * 1e3, np.abs(S['top_out', 'in'])**2)
 plt.plot([wl*1e3, wl*1e3], [0, 1])
 # plt.plot(wavelengths * 1e3, [np.abs(S['top_out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
-plt.plot(wavelengths * 1e3, [np.abs(S['top_out', 'in'][int(idx_max)])**2 for x in wavelengths])
+plt.plot(wavelengths * 1e3, [np.abs(S['top_out', 'in'][int(idx_min)])**2 for x in wavelengths])
 plt.xlabel("Wavelength [nm]")
 plt.ylabel("Transmission [au]")
 plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
