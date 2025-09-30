@@ -71,7 +71,7 @@ print("PS Vpi = %f" % ps_vpi)
 cm.bandwidth = 50e9    # Modulator bandwidth (in Hz)
 
 num_symbols = 2**10
-samples_per_symbol = 2**7
+samples_per_symbol = 2**8
 bit_rate = 50e9
 
 results = simulate_modulation_16QAM(

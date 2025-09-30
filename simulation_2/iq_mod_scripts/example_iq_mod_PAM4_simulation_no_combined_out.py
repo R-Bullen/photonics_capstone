@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=False, delay_at_input=True)
+iq_mod = IQModulator(with_delays=True, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 #lv.visualize(annotate=True)
@@ -38,6 +38,14 @@ S = cm.get_smatrix(wavelengths=wavelengths)
 idx_min = np.argmin(np.abs(np.abs(S['top_out', 'in']) ** 2))
 wl = wavelengths[idx_min]
 print("Minimum transmission wavelength: {}".format(wl))
+
+idx_max = np.argmin(np.abs(np.abs(S['top_out', 'in']) ** 2))
+wl = wavelengths[idx_max]
+print("Maximum transmission wavelength: {}".format(wl))
+
+wl = wavelengths[int((idx_min + idx_max) / 2)]
+print("Quadrature wavelength: {}".format(wl))
+
 
 # plt.figure()
 # plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
@@ -84,7 +92,7 @@ results = simulate_modulation_PAM4(
     v_heater_i=0.0,  # 4-Level Amplitude Modulation, thus no phase shift
     v_heater_q=0.0,
     v_mzm_left1=0.0,  # MZM (left) works at its linear biased point
-    v_mzm_left2=ps_vpi/2,
+    v_mzm_left2=0,
     v_mzm_right1=0.0,  # MZM (right) works at its linear biased point
     v_mzm_right2=ps_vpi/2,
     bit_rate=50e9,

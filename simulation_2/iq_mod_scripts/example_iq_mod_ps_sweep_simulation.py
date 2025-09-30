@@ -10,7 +10,7 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from custom_components.iq_modulator_design_symmetric_model import IQModulator
+from custom_components.iq_modulator_design_new_model import IQModulator
 from simulation_2.iq_mod_scripts.simulation.simulate_iq_mod_ps_sweep import simulate_modulation_ps_sweep
 
 import numpy as np
@@ -94,18 +94,18 @@ bit_rate = 50e9
 
 results = simulate_modulation_ps_sweep(
     cell=iq_mod,
-    mod_amplitude_i=rf_vpi/2,
+    mod_amplitude_i=2,
     mod_noise_i=0.0,
-    mod_amplitude_q=rf_vpi/2,
+    mod_amplitude_q=1,
     mod_noise_q=0.0,
     opt_amplitude=2.0,
     opt_noise=0.0,
-    v_heater_i=0, # The half pi phase shift implements orthogonal modulation
-    v_heater_q=0,
+    v_heater_i=0,
+    v_heater_q=0, # heater q is swept
     v_mzm_left1=0,
     v_mzm_left2=0,
     v_mzm_right1=0,
-    v_mzm_right2=ps_vpi,
+    v_mzm_right2=ps_vpi/2,
     bit_rate=50e9,
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
@@ -140,9 +140,13 @@ plt.tight_layout()
 
 # index of max optical output
 max_index = np.argmax(np.real(results["out"]))
-print("max index:", max_index)
-max_wavelength = np.real(results["ht_q"][max_index])
-print("max power from voltage: {}".format(max_wavelength))
+min_index = np.argmin(np.real(results["out"]))
+max_wavelength_v = np.real(results["ht_q"][max_index])
+print("max power from voltage: {}".format(max_wavelength_v))
+min_wavelength_v = np.real(results["ht_q"][min_index])
+print("min power from voltage: {}".format(min_wavelength_v))
+quad_voltage = (max_wavelength_v + min_wavelength_v) / 2
+print("Quadrature wavelength at voltage: {}".format(quad_voltage))
 
 ########################################################################################################################
 # Plot EyeDiagram
