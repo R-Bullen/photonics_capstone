@@ -94,9 +94,9 @@ bit_rate = 50e9
 
 results = simulate_modulation_ps_sweep(
     cell=iq_mod,
-    mod_amplitude_i=2,
+    mod_amplitude_i=rf_vpi/2,
     mod_noise_i=0.0,
-    mod_amplitude_q=1,
+    mod_amplitude_q=rf_vpi/2,
     mod_noise_q=0.0,
     opt_amplitude=2.0,
     opt_noise=0.0,

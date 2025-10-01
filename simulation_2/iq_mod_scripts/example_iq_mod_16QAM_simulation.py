@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=True, delay_at_input=True)
+iq_mod = IQModulator(with_delays=False, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 #
@@ -70,31 +70,31 @@ print("PS Vpi = %f" % ps_vpi)
 
 cm.bandwidth = 50e9    # Modulator bandwidth (in Hz)
 
-num_symbols = 2**10
-samples_per_symbol = 2**8
+num_symbols = 2**12
+samples_per_symbol = 2**10
 bit_rate = 50e9
 
 results = simulate_modulation_16QAM(
     cell=iq_mod,
     mod_amplitude_i=rf_vpi/2,
-    mod_noise_i=0.0,
+    mod_noise_i=rf_vpi/20,
     mod_amplitude_q=rf_vpi/2,
-    mod_noise_q=0.0,
+    mod_noise_q=rf_vpi/20,
     opt_amplitude=2.0,
-    opt_noise=0.0,
+    opt_noise=0.2,
     v_heater_i=0,
-    # v_heater_q=ps_vpi/2, # for no-delay
-    v_heater_q=1.5542521994134897, # for with-delay
-    # v_mzm_left1=ps_vpi, # for no-delay
-    v_mzm_left1=0, # for with-delay
+    v_heater_q=ps_vpi/2, # for no-delay
+    # v_heater_q=1.5542521994134897, # for with-delay
+    v_mzm_left1=ps_vpi, # for no-delay
+    # v_mzm_left1=0, # for with-delay
     v_mzm_left2=0,
     v_mzm_right1=0,
     v_mzm_right2=ps_vpi,
     bit_rate=50e9,
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
-    center_wavelength=1.55195, # for with-delay
-    # center_wavelength=1.55, # for no-delay
+    center_wavelength=1.55, # for no-delay
+    # center_wavelength=1.55195, # for with-delay
     qam_level=16,
 )
 
@@ -134,7 +134,7 @@ eye.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res = result_modified_16QAM(results, samples_per_symbol=samples_per_symbol, sampling_point=0.8)
+res = result_modified_16QAM(results, samples_per_symbol=samples_per_symbol, sampling_point=0.9)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)

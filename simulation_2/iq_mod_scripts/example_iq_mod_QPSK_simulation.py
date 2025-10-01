@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=False, delay_at_input=True)
+iq_mod = IQModulator(with_delays=True, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 #
@@ -81,15 +81,18 @@ results = simulate_modulation_QPSK(
     opt_amplitude=2.0,
     opt_noise=0.2,
     v_heater_i=0,
-    v_heater_q=ps_vpi/2, # The half pi phase shift implements orthogonal modulation
-    v_mzm_left1=ps_vpi/2,  # MZM (left) works at its Maximum transmission points
+    # v_heater_q=ps_vpi/2, # for no-delay
+    v_heater_q=1.5542521994134897, # for with-delay
+    # v_mzm_left1=ps_vpi, # for no-delay
+    v_mzm_left1=0.0, # for with-delay
     v_mzm_left2=0.0,
-    v_mzm_right1=ps_vpi/2,  # MZM (right) works at its Maximum transmission points
-    v_mzm_right2=0.0,
+    v_mzm_right1=0.0,
+    v_mzm_right2=ps_vpi,
     bit_rate=50e9,
     n_bytes=num_symbols,
     steps_per_bit=samples_per_symbol,
-    center_wavelength=1.55,
+    # center_wavelength=1.55, # for no-delay
+    center_wavelength=1.55195, # for with-delay
 )
 
 outputs = ["sig_i", "sig_q", "src_in", "out"]
