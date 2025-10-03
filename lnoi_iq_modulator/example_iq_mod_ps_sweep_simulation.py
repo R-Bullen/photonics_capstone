@@ -10,8 +10,8 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from custom_components.iq_modulator_design import IQModulator
-from simulation.simulate_iq_modulator import simulate_modulation_iq_mod, result_modified_OOK
+from iq_modulator_design import IQModulator
+from simulation.simulate_iq_mod_ps_sweep import simulate_modulation_ps_sweep
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,11 +23,13 @@ import matplotlib.pyplot as plt
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=False, delay_at_input=True)
+iq_mod = IQModulator(with_delays=True, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
 #
-# lv.visualize(annotate=True)
+lv.visualize(annotate=True)
+
+# lv.to_canvas()
 
 ########################################################################################################################
 # Find the operating wavelength so that the modulator is operating at the quadrature biasing point
@@ -35,7 +37,7 @@ lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_ga
 
 cm = iq_mod.CircuitModel()
 
-wavelengths = np.linspace(1.55, 1.555, 101)
+wavelengths = np.linspace(1.549, 1.555, 101)
 S = cm.get_smatrix(wavelengths=wavelengths)
 
 idx_min = np.argmin(np.abs(np.abs(S['out', 'in'])**2))
@@ -43,6 +45,24 @@ idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
 wl = wavelengths[int((idx_min + idx_max) / 2)]
 print("Quadrature wavelength: {}".format(wl))
 
+plt.figure()
+plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
+plt.plot([wl*1e3, wl*1e3], [0, 1])
+plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
+plt.xlabel("Wavelength [nm]")
+plt.ylabel("Transmission [au]")
+plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
+plt.ylim(0, 1)
+plt.show()
+
+# wavelengths = np.linspace(1.549, 1.555, 101)
+# S = cm.get_smatrix(wavelengths=wavelengths)
+#
+# idx_min = np.argmin(np.abs(np.abs(S['out', 'in'])**2))
+# idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
+# wl = wavelengths[int((idx_min + idx_max) / 2)]
+# print("Quadrature wavelength: {}".format(wl))
+#
 # plt.figure()
 # plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
 # plt.plot([wl*1e3, wl*1e3], [0, 1])
@@ -66,52 +86,48 @@ print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 ps_vpi = 0.1 / (200/10000)
 print("PS Vpi = %f" % ps_vpi)
 
-cm.bandwidth = 100e9    # Modulator bandwidth (in Hz)
+cm.bandwidth = 50e9    # Modulator bandwidth (in Hz)
 
-num_symbols = 2**7
+num_symbols = 2**10
 samples_per_symbol = 2**7
 bit_rate = 50e9
 
-results = simulate_modulation_iq_mod(
+results = simulate_modulation_ps_sweep(
     cell=iq_mod,
-    mod_amplitude_i=V_half_pi*0.8,
+    mod_amplitude_i=rf_vpi/2,
     mod_noise_i=0.0,
-    mod_amplitude_q=V_half_pi*0.8, # 3*V_half_pi,
+    mod_amplitude_q=rf_vpi/2,
     mod_noise_q=0.0,
-    opt_amplitude=1.0,
+    opt_amplitude=2.0,
     opt_noise=0.0,
-    v_heater_i=ps_vpi*3/2,  # The half pi phase shift implements orthogonal modulation
-    v_heater_q=ps_vpi*3/2,
-    v_heater_i_2=ps_vpi*3/2,
-    v_heater_q_2=ps_vpi*3/2,
-    v_heater_out=ps_vpi,
+    v_heater_i=0,
+    v_heater_q=0, # heater q is swept
+    v_mzm_left1=0,
+    v_mzm_left2=0,
+    v_mzm_right1=0,
+    v_mzm_right2=ps_vpi/2,
     bit_rate=50e9,
-    n_bytes=2 ** 6,
-    steps_per_bit=2 ** 7,
-    center_wavelength=1.55,
+    n_bytes=num_symbols,
+    steps_per_bit=samples_per_symbol,
+    center_wavelength=1.55195,
 )
-# outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
-# titles = [
-#     "RF signal",
-#     "Heater(bottom) electrical input",
-#     "Heater(top) electrical input",
-#     "Optical input",
-#     "Optical output",
-# ]
-#
-# ylabels = ["voltage [V]", "voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
-# process = [np.real, np.real, np.real, np.abs, np.abs]
-outputs = ["sig_i", "sig_q", "src_in", "out"] #, "top_out", "bottom_out"]
+
+# outputs = ["sig_i", "sig_q", "ht_q", "src_in", "out", "out"]
+outputs = ["ht_q", "out", "out"]
 titles = [
-    "RF signal (top)",
-    "RF signal (bottom)",
-    "Optical input",
+    # "RF signal (top)",
+    # "RF signal (bottom)",
+    "Output PS voltage (output)",
+    # "Optical input",
     "Optical output",
-    # "Optical output (top)",
+    "Output Angle"
+
     # "Optical output (bottom)",
 ]
-ylabels = ["voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"] #, "amplitude [au]", "amplitude [au]"]
-process = [np.real, np.real, np.abs, np.real] #, np.real, np.real]
+# ylabels = ["voltage [V]", "voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]", "angle"] #, "amplitude [au]", "amplitude [au]"]
+ylabels = ["voltage [V]", "amplitude [au]", "angle"] #, "amplitude [au]", "amplitude [au]"]
+# process = [np.real, np.real, np.real, np.abs, np.real, np.angle] #, np.real, np.real]
+process = [np.real, np.real, np.angle] #, np.real, np.real]
 
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
@@ -121,6 +137,16 @@ for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
     ax.set_xlabel("time [ns]")
     ax.set_ylabel(ylabel)
 plt.tight_layout()
+
+# index of max optical output
+max_index = np.argmax(np.real(results["out"]))
+min_index = np.argmin(np.real(results["out"]))
+max_wavelength_v = np.real(results["ht_q"][max_index])
+print("max power from voltage: {}".format(max_wavelength_v))
+min_wavelength_v = np.real(results["ht_q"][min_index])
+print("min power from voltage: {}".format(min_wavelength_v))
+quad_voltage = (max_wavelength_v + min_wavelength_v) / 2
+print("Quadrature wavelength at voltage: {}".format(quad_voltage))
 
 ########################################################################################################################
 # Plot EyeDiagram
@@ -135,13 +161,13 @@ eye.visualize(show=False)
 # Plot Constellation diagram
 ########################################################################################################################
 
-plt.figure(4)
-res = result_modified_16QAM(results )
-plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
-plt.grid()
-plt.xlabel("real", fontsize=14)
-plt.ylabel("imag", fontsize=14)
-plt.title("Constellation diagram", fontsize=14)
-plt.xlim([-1.0, 1.0])
-plt.ylim([-1.0, 1.0])
+# plt.figure(4)
+# res = result_modified_16QAM(results, samples_per_symbol=samples_per_symbol, sampling_point=0.8)
+# plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
+# plt.grid()
+# plt.xlabel("real", fontsize=14)
+# plt.ylabel("imag", fontsize=14)
+# plt.title("Constellation diagram", fontsize=14)
+# # plt.xlim([-1.0, 1.0])
+# # plt.ylim([-1.0, 1.0])
 plt.show()

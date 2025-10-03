@@ -10,8 +10,8 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from custom_components.iq_modulator_design import IQModulator
-from simulation.simulate_iq_modulator import simulate_modulation_iq_mod, result_modified_OOK
+from iq_modulator_design_no_combined_output import IQModulator
+from simulation.simulate_iq_mod_QPSK_no_combiner import simulate_modulation_QPSK, result_modified_QPSK_top, result_modified_QPSK_bottom
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,10 +38,10 @@ cm = iq_mod.CircuitModel()
 wavelengths = np.linspace(1.55, 1.555, 101)
 S = cm.get_smatrix(wavelengths=wavelengths)
 
-idx_min = np.argmin(np.abs(np.abs(S['out', 'in'])**2))
-idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
-wl = wavelengths[int((idx_min + idx_max) / 2)]
-print("Quadrature wavelength: {}".format(wl))
+# idx_min = np.argmin(np.abs(np.abs(S['out', 'in'])**2))
+# idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
+# wl = wavelengths[int((idx_min + idx_max) / 2)]
+# print("Quadrature wavelength: {}".format(wl))
 
 # plt.figure()
 # plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
@@ -72,47 +72,52 @@ num_symbols = 2**7
 samples_per_symbol = 2**7
 bit_rate = 50e9
 
-results = simulate_modulation_iq_mod(
+results = simulate_modulation_QPSK(
     cell=iq_mod,
-    mod_amplitude_i=V_half_pi*0.8,
+    mod_amplitude_i=3.0,
     mod_noise_i=0.0,
-    mod_amplitude_q=V_half_pi*0.8, # 3*V_half_pi,
+    mod_amplitude_q=3.0,
     mod_noise_q=0.0,
-    opt_amplitude=1.0,
+    opt_amplitude=2.0,
     opt_noise=0.0,
-    v_heater_i=ps_vpi*3/2,  # The half pi phase shift implements orthogonal modulation
-    v_heater_q=ps_vpi*3/2,
-    v_heater_i_2=ps_vpi*3/2,
-    v_heater_q_2=ps_vpi*3/2,
-    v_heater_out=ps_vpi,
+    v_heater_i=ps_vpi/2,
+    v_heater_q=0, # The half pi phase shift implements orthogonal modulation
+    v_mzm_left1=ps_vpi/2,  # MZM (left) works at its Maximum transmission points
+    v_mzm_left2=0.0,
+    v_mzm_right1=ps_vpi/2,  # MZM (right) works at its Maximum transmission points
+    v_mzm_right2=0.0,
     bit_rate=50e9,
-    n_bytes=2 ** 6,
-    steps_per_bit=2 ** 7,
+    n_bytes=2**8,
+    steps_per_bit=2**7,
     center_wavelength=1.55,
 )
-# outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
-# titles = [
-#     "RF signal",
-#     "Heater(bottom) electrical input",
-#     "Heater(top) electrical input",
-#     "Optical input",
-#     "Optical output",
-# ]
-#
-# ylabels = ["voltage [V]", "voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
-# process = [np.real, np.real, np.real, np.abs, np.abs]
-outputs = ["sig_i", "sig_q", "src_in", "out"] #, "top_out", "bottom_out"]
+
+# outputs = ["sig_i", "revsig_i", "sig_q", "revsig_q", "ht_i", "ht_q", "src_in", "out"]
+outputs = ["sig_i", "sig_q", "ht_i", "ht_q", "src_in", "top_out", "bottom_out"]
 titles = [
-    "RF signal (top)",
-    "RF signal (bottom)",
+    "RF signal_i",
+    # "RF reversed signal_i",
+    "RF signal_q",
+    # "RF reversed signal_q",
+    "Heater(left) electrical input",
+    "Heater(right) electrical input",
     "Optical input",
     "Optical output",
-    # "Optical output (top)",
-    # "Optical output (bottom)",
+    "Optical output",
 ]
-ylabels = ["voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"] #, "amplitude [au]", "amplitude [au]"]
-process = [np.real, np.real, np.abs, np.real] #, np.real, np.real]
-
+ylabels = [
+    "voltage [V]",
+    "voltage [V]",
+    # "voltage [V]",
+    # "voltage [V]",
+    "voltage [V]",
+    "voltage [V]",
+    "power [W]",
+    "power [W]",
+    "power [W]",
+]
+# process = [np.real, np.real, np.real, np.real, np.real, np.real, np.abs, np.angle]
+process = [np.real, np.real, np.real, np.real, np.abs, np.angle, np.angle]
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
     data = pr(results[out][1:])
@@ -126,22 +131,40 @@ plt.tight_layout()
 # Plot EyeDiagram
 ########################################################################################################################
 
-data_stream = np.abs(results["out"]) ** 2
-time_step = 1.0 / (bit_rate * samples_per_symbol)
-eye = i3.EyeDiagram(data_stream, bit_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
+num_symbols = 2**8
+samples_per_symbol = 2**7
+data_stream = np.abs(results["top_out"]) ** 2
+baud_rate = 50e9
+time_step = 1.0 / (baud_rate * samples_per_symbol)
+eye = i3.EyeDiagram(data_stream, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
+eye.visualize(show=False)
+
+num_symbols = 2**8
+samples_per_symbol = 2**7
+data_stream = np.abs(results["bottom_out"]) ** 2
+baud_rate = 50e9
+time_step = 1.0 / (baud_rate * samples_per_symbol)
+eye = i3.EyeDiagram(data_stream, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
 eye.visualize(show=False)
 
 ########################################################################################################################
 # Plot Constellation diagram
 ########################################################################################################################
 
-plt.figure(4)
-res = result_modified_16QAM(results )
+plt.figure(6)
+res = result_modified_QPSK_top(results)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)
 plt.ylabel("imag", fontsize=14)
 plt.title("Constellation diagram", fontsize=14)
-plt.xlim([-1.0, 1.0])
-plt.ylim([-1.0, 1.0])
+# plt.show()
+
+plt.figure(7)
+res = result_modified_QPSK_bottom(results)
+plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
+plt.grid()
+plt.xlabel("real", fontsize=14)
+plt.ylabel("imag", fontsize=14)
+plt.title("Constellation diagram", fontsize=14)
 plt.show()

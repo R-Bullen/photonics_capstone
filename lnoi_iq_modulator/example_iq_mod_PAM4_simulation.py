@@ -1,5 +1,4 @@
-
-"""Simulate an MZ modulator working in OOK modulation format. This is mainly based on Luceda Academy example.
+"""Simulate an MZ modulator working in BPSK modulation format. c
 
 This script generates several outputs:
 - visualize the layout in a matplotlib window (this pauses script execution)
@@ -10,43 +9,40 @@ This script generates several outputs:
 
 import asp_sin_lnoi_photonics.all as asp
 import ipkiss3.all as i3
-from custom_components.iq_modulator_design import IQModulator
-from simulation.simulate_iq_modulator import simulate_modulation_iq_mod, result_modified_OOK
+
+from iq_modulator_design import IQModulator
+from simulation.simulate_iq_mod_PAM4 import simulate_modulation_PAM4, result_modified_PAM4
 
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 ########################################################################################################################
-# Create a 1x1 MZM with a length difference between the two arms to set the biasing point 
+# Create a 1x1 MZM with a length difference between the two arms to set the biasing point
 # by selecting the operating wavelength
 ########################################################################################################################
 
 electrode_length = 8000
-iq_mod = IQModulator(with_delays=False, delay_at_input=True)
+iq_mod = IQModulator(with_delays=True, delay_at_input=True)
 
 lv = iq_mod.Layout(electrode_length=electrode_length, hot_width=50, electrode_gap=9)
-#
-# lv.visualize(annotate=True)
+#lv.visualize(annotate=True)
 
 ########################################################################################################################
-# Find the operating wavelength so that the modulator is operating at the quadrature biasing point
+# Find the operating wavelength so that the modulator is operating at the minimum transmission point
 ########################################################################################################################
-
 cm = iq_mod.CircuitModel()
 
 wavelengths = np.linspace(1.55, 1.555, 101)
 S = cm.get_smatrix(wavelengths=wavelengths)
 
-idx_min = np.argmin(np.abs(np.abs(S['out', 'in'])**2))
-idx_max = np.argmax(np.abs(np.abs(S['out', 'in'])**2))
-wl = wavelengths[int((idx_min + idx_max) / 2)]
-print("Quadrature wavelength: {}".format(wl))
+idx_min = np.argmin(np.abs(np.abs(S['out', 'in']) ** 2))
+wl = wavelengths[idx_min]
+print("Minimum transmission wavelength: {}".format(wl))
 
 # plt.figure()
 # plt.plot(wavelengths * 1e3, np.abs(S['out', 'in'])**2)
 # plt.plot([wl*1e3, wl*1e3], [0, 1])
-# plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][int((idx_min + idx_max) / 2)])**2 for x in wavelengths])
+# plt.plot(wavelengths * 1e3, [np.abs(S['out', 'in'][idx_min])**2 for x in wavelengths])
 # plt.xlabel("Wavelength [nm]")
 # plt.ylabel("Transmission [au]")
 # plt.xlim([wavelengths[0] * 1e3, wavelengths[-1] * 1e3])
@@ -54,66 +50,75 @@ print("Quadrature wavelength: {}".format(wl))
 # plt.show()
 
 ########################################################################################################################
-# Simulation of a MZM working in OOK modulation format.
+# Simulation of a MZM working in BPSK modulation format.
 ########################################################################################################################
 
 # Define modulator characteristics
 # Voltage needed for a pi phase shift and half pi shift
-rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)        # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
+rf_vpi = cm.vpi_l / 2 / (electrode_length / 10000)  # VpiL unit is V.cm; Dividing be 2 is due to push-pull configutation
 V_half_pi = rf_vpi / 2
 print("Modulator RF electrode Vpi: {} V".format(rf_vpi))
 
-ps_vpi = 0.1 / (200/10000)
+ps_vpi = 0.1 / (200 / 10000)
 print("PS Vpi = %f" % ps_vpi)
 
-cm.bandwidth = 100e9    # Modulator bandwidth (in Hz)
+cm.bandwidth = 50e9  # Modulator bandwidth (in Hz)
 
-num_symbols = 2**7
-samples_per_symbol = 2**7
+num_symbols = 2 ** 9
+samples_per_symbol = 2 ** 9
 bit_rate = 50e9
 
-results = simulate_modulation_iq_mod(
-    cell=iq_mod,
-    mod_amplitude_i=V_half_pi*0.8,
-    mod_noise_i=0.0,
-    mod_amplitude_q=V_half_pi*0.8, # 3*V_half_pi,
-    mod_noise_q=0.0,
-    opt_amplitude=1.0,
-    opt_noise=0.0,
-    v_heater_i=ps_vpi*3/2,  # The half pi phase shift implements orthogonal modulation
-    v_heater_q=ps_vpi*3/2,
-    v_heater_i_2=ps_vpi*3/2,
-    v_heater_q_2=ps_vpi*3/2,
-    v_heater_out=ps_vpi,
-    bit_rate=50e9,
-    n_bytes=2 ** 6,
-    steps_per_bit=2 ** 7,
-    center_wavelength=1.55,
-)
-# outputs = ["sig", "mzm1", "mzm2", "src_in", "out"]
-# titles = [
-#     "RF signal",
-#     "Heater(bottom) electrical input",
-#     "Heater(top) electrical input",
-#     "Optical input",
-#     "Optical output",
-# ]
-#
-# ylabels = ["voltage [V]", "voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"]
-# process = [np.real, np.real, np.real, np.abs, np.abs]
-outputs = ["sig_i", "sig_q", "src_in", "out"] #, "top_out", "bottom_out"]
-titles = [
-    "RF signal (top)",
-    "RF signal (bottom)",
-    "Optical input",
-    "Optical output",
-    # "Optical output (top)",
-    # "Optical output (bottom)",
-]
-ylabels = ["voltage [V]", "voltage [V]", "amplitude [au]", "amplitude [au]"] #, "amplitude [au]", "amplitude [au]"]
-process = [np.real, np.real, np.abs, np.real] #, np.real, np.real]
 
+########################################################################################################################
+# Simulation of a IQ modulator working in PAM4 modulation format.
+########################################################################################################################
+
+results = simulate_modulation_PAM4(
+    cell=iq_mod,
+    mod_amplitude_i=2.0,
+    mod_noise_i=0.2,
+    mod_amplitude_q=1.0,
+    mod_noise_q=0.1,
+    opt_amplitude=1.0,
+    opt_noise=0.1,
+    v_heater_i=0,
+    # v_heater_q=0, # for no-delay
+    v_heater_q=5.303030303030303, # quadrature voltage, for with-delay
+    # v_mzm_left1=ps_vpi/2, # for no-delay
+    v_mzm_left1=0,  # for with-delay
+    v_mzm_left2=0.0,
+    v_mzm_right1=0.0,
+    v_mzm_right2=ps_vpi/2,
+    bit_rate=bit_rate,
+    n_bytes=num_symbols,
+    steps_per_bit=samples_per_symbol,
+    # center_wavelength=1.55, # for no-delay
+    center_wavelength=1.55195, # for with-delay
+)
+# outputs = ["sig_i", "sig_q", "ht_i", "ht_q", "src_in", "out", "out"]
+outputs = ["sig_i", "sig_q", "out", "out"]
+titles = [
+    "RF signal_i",
+    "RF signal_q",
+    # "Heater(left) electrical input",
+    # "Heater(right) electrical input",
+    # "Optical input",
+    "Optical output",
+    "Output angle"
+]
+ylabels = [
+    "voltage [V]",
+    "voltage [V]",
+    # "voltage [V]",
+    # "voltage [V]",
+    # "power [W]",
+    "power [W]",
+    "angle (radians)"
+]
+# process = [np.real, np.real, np.real, np.real, np.abs, np.abs, np.angle]
+process = [np.real, np.real, np.abs, np.angle]
 fig, axs = plt.subplots(nrows=len(outputs), ncols=1, figsize=(6, 10))
+
 for ax, pr, out, title, ylabel in zip(axs, process, outputs, titles, ylabels):
     data = pr(results[out][1:])
     ax.set_title(title)
@@ -127,8 +132,10 @@ plt.tight_layout()
 ########################################################################################################################
 
 data_stream = np.abs(results["out"]) ** 2
-time_step = 1.0 / (bit_rate * samples_per_symbol)
-eye = i3.EyeDiagram(data_stream, bit_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
+# baud_rate = 50e9
+baud_rate = bit_rate
+time_step = 1.0 / (baud_rate * samples_per_symbol)
+eye = i3.EyeDiagram(data_stream, baud_rate, time_step, resampling_rate=2, n_eyes=2, offset=0.2)
 eye.visualize(show=False)
 
 ########################################################################################################################
@@ -136,12 +143,12 @@ eye.visualize(show=False)
 ########################################################################################################################
 
 plt.figure(4)
-res = result_modified_16QAM(results )
+res = result_modified_PAM4(results, samples_per_symbol=samples_per_symbol, sampling_point=0.9)
 plt.scatter(np.real(res), np.imag(res), marker="+", linewidths=10, alpha=0.1)
 plt.grid()
 plt.xlabel("real", fontsize=14)
 plt.ylabel("imag", fontsize=14)
 plt.title("Constellation diagram", fontsize=14)
-plt.xlim([-1.0, 1.0])
+plt.xlim([-1.5, 1.5])
 plt.ylim([-1.0, 1.0])
 plt.show()
