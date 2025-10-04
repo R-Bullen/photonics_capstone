@@ -1,7 +1,7 @@
 # Copyright (C) 2020-2024 Luceda Photonics
 
 """
-Set up a testbench for an IQ modulator working in QAM modulation format.
+Set up a testbench for an IQ modulator working in PAM4 modulation format.
 """
 
 import random
