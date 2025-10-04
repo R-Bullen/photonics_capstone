@@ -91,16 +91,6 @@ def simulate_modulation_PAM4(
         amplitude=mod_amplitude_q,
         n_bytes=n_bytes,
     )
-    # f_mod_i2 = random_bitsource(
-    #     bitrate=bit_rate,
-    #     amplitude=mod_amplitude_i / 2,
-    #     n_bytes=n_bytes,
-    # )
-    # f_mod_q2 = random_bitsource(
-    #     bitrate=bit_rate,
-    #     amplitude=mod_amplitude_q / 2,
-    #     n_bytes=n_bytes,
-    # )
     rand_normal_dist = rand_normal()
     src_in = i3.FunctionExcitation(
         port_domain=i3.OpticalDomain, excitation_function=lambda t: opt_amplitude + rand_normal_dist(opt_noise)
@@ -108,15 +98,9 @@ def simulate_modulation_PAM4(
     signal_i = i3.FunctionExcitation(
         port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_i(t) + rand_normal_dist(mod_noise_i)
     )
-    # revsignal_i = i3.FunctionExcitation(
-    #     port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_i2(t) - rand_normal_dist(mod_noise_i)
-    # )
     signal_q = i3.FunctionExcitation(
         port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_q(t) + rand_normal_dist(mod_noise_q)
     )
-    # revsignal_q = i3.FunctionExcitation(
-    #     port_domain=i3.ElectricalDomain, excitation_function=lambda t: -f_mod_q2(t) - rand_normal_dist(mod_noise_q)
-    # )
     heater_i = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_i)
     heater_q = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_q)
     mzm_left1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_left1)
@@ -143,9 +127,7 @@ def simulate_modulation_PAM4(
             "out": i3.Probe(port_domain=i3.OpticalDomain),
             "src_in": src_in,
             "sig_i": signal_i,
-            # "revsig_i": revsignal_i,
             "sig_q": signal_q,
-            # "revsig_q": revsignal_q,
             "gnd1": gnd1,
             "gnd2": gnd2,
             "gnd3": gnd3,
@@ -194,11 +176,6 @@ def simulate_modulation_PAM4(
         debug=debug,
     )
     return results
-
-# def result_modified_PAM4(result):
-#     res_sample = random.sample(list(result["out"]), 200)
-#
-#     return [res * np.exp(-1j * np.angle(res)) for res in res_sample]
 
 def result_modified_PAM4(result, samples_per_symbol=2**6, sampling_point=0.5):
     res_sample = result["out"][int(samples_per_symbol * (10 + sampling_point))::samples_per_symbol]
