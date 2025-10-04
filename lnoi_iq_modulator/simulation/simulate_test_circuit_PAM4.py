@@ -101,11 +101,11 @@ def simulate_modulation_PAM4(
     signal_q = i3.FunctionExcitation(
         port_domain=i3.ElectricalDomain, excitation_function=lambda t: f_mod_q(t) + rand_normal_dist(mod_noise_q)
     )
-    heater_i = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_i)
+    # heater_i = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_i)
     heater_q = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_heater_q)
-    mzm_left1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_left1)
-    mzm_left2 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_left2)
-    mzm_right1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_right1)
+    # mzm_left1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_left1)
+    # mzm_left2 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_left2)
+    # mzm_right1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_right1)
     mzm_right2 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: v_mzm_right2)
     gnd1 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
     gnd2 = i3.FunctionExcitation(port_domain=i3.ElectricalDomain, excitation_function=lambda t: 0.0)
@@ -124,26 +124,33 @@ def simulate_modulation_PAM4(
     testbench = i3.ConnectComponents(
         child_cells={
             "DUT": cell,
-            "out": i3.Probe(port_domain=i3.OpticalDomain),
             "src_in": src_in,
-            "sig_i": signal_i,
-            "sig_q": signal_q,
-            "gnd1": gnd1,
+            "out": i3.Probe(port_domain=i3.OpticalDomain),
+
             "ps_q_out": heater_q,
-            "ps_q_in2": mzm_right2,
+            "gnd1": gnd1,
+            "ps_q_in": mzm_right2,
+
+            "gnd2": gnd2,
+            "sig_i": signal_i,
+            "gnd3": gnd3,
+            "sig_q": signal_q,
+            "gnd4": gnd4,
+
         },
         links=[
             ("src_in:out", "DUT:in"),
             ("DUT:out", "out:in"),
-            ("DUT:pad_ps_in", "ht_q:out"),
+
+            ("DUT:pad_ps_in", "heater_q:out"),
+            ("DUT:pad_gnd", "gnd1:out"),
             ("DUT:pad_ps_out", "mzm_right2:out"),
+
+            ("DUT:top_ground", "gnd2:out"),
             ("DUT:top_signal", "sig_i:out"),
+            ("DUT:middle_ground", "gnd3:out"),
             ("DUT:bottom_signal", "sig_q:out"),
-            ("DUT:mzm_2_ps_out_gnd", "gnd2:out"),
-            ("DUT:mzm_2_ps_2_gnd", "gnd6:out"),
-            ("DUT:top_ground", "gnd7:out"),
-            ("DUT:middle_ground", "gnd8:out"),
-            ("DUT:bottom_ground", "gnd9:out"),
+            ("DUT:bottom_ground", "gnd4:out"),
         ],
     )
 
