@@ -130,6 +130,8 @@ class IQModulatorTestCircuit(i3.Circuit):
             # need to add: in, out (optical input and output)
             # in
             # out
+            'gc_3:out' : 'in',
+            'gc_4:out' : 'out',
 
             'pad_ps_in:m1' : 'pad_ps_in',
             'pad_gnd:m1': 'pad_gnd',
