@@ -164,11 +164,6 @@ def simulate_modulation_PAM4(
     )
     return results
 
-# def result_modified_PAM4(result):
-#     res_sample = random.sample(list(result["out"]), 200)
-#
-#     return [res * np.exp(-1j * np.angle(res)) for res in res_sample]
-
 def result_modified_PAM4(result, samples_per_symbol=2**6, sampling_point=0.5):
     res_sample = result["out"][int(samples_per_symbol * (10 + sampling_point))::samples_per_symbol]
 
