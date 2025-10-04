@@ -37,9 +37,31 @@ class IQModulatorTestCircuit(i3.Circuit):
 
         pad_y = -500
 
+        GC_W = 42
+        GC_GAP = 127 + GC_W
+        GC_X = -507 - (GC_GAP / 2)
+        GC_Y = 2000
+        BEND_RADIUS = 150
+
         specs = [
             # iq modulator placement
             i3.Place('iq_mod', (0, 0)),
+
+            # Grating Coupler Placement
+            i3.Place('gc_0', (GC_X, GC_Y), -90),
+            i3.Place('gc_1', (GC_X + GC_GAP, GC_Y), -90),
+            i3.Place('gc_2', (GC_X + 2 * GC_GAP, GC_Y), -90),
+            i3.Place('gc_3', (GC_X + 3 * GC_GAP, GC_Y), -90),
+            i3.Place('gc_4', (GC_X + 4 * GC_GAP, GC_Y), -90),
+            i3.Place('gc_5', (GC_X + 5 * GC_GAP, GC_Y), -90),
+            i3.Place('gc_6', (GC_X + 6 * GC_GAP, GC_Y), -90),
+            i3.Place('gc_7', (GC_X + 7 * GC_GAP, GC_Y), -90),
+
+            # Grating Coupler Connection
+            i3.ConnectManhattan([('gc_0:out', 'gc_7:out')], control_points=[i3.V(-900), i3.H(1900 + 300)],
+                                bend_radius=BEND_RADIUS),
+            i3.ConnectManhattan([('gc_3:out', 'iq_mod:in')], control_points=[i3.H(700)], bend_radius=BEND_RADIUS),
+            i3.ConnectManhattan([('gc_4:out', 'iq_mod:out')], control_points=[i3.H(700)], bend_radius=BEND_RADIUS),
 
             # pad placement
             i3.Place('pad_ps_in', (-200, pad_y)),
