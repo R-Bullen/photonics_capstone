@@ -80,10 +80,44 @@ class IQModulatorTestCircuit(i3.Circuit):
         return specs
 
     def _default_exposed_ports(self):
+        """
+        Ports:
+
+        OPTICAL
+            in - optical input
+            out - optical output
+
+        PADS
+            pad_ps_in - pad going to bottom heater on input side
+            pad_gnd - pad acting as ground
+            pad_ps_out - pad going to bottom arm heater at output
+
+        PROBE LOCATIONS ON MODULATOR
+            top_ground - top ground on modulator
+            top_signal - top signal on modulator
+            middle_ground - middle ground on modulator
+            bottom_signal - bottom signal on modulator
+            bottom_ground - bottom ground on modulator
+
+        Returns
+        ------- Set of exposed ports
+
+        """
+
         ports = {
+            # need to add: in, out (optical input and output)
+            # in
+            # out
+
             'pad_ps_in:m1' : 'pad_ps_in',
+            'pad_gnd:m1': 'pad_gnd',
             'pad_ps_out:m1' : 'pad_ps_out',
-            'pad_gnd:m1' : 'pad_gnd',
+
+            'iq_mod:top_ground' : 'top_ground',
+            'iq_mod:top_signal' : 'top_signal',
+            'iq_mod:middle_ground' : 'middle_ground',
+            'iq_mod:bottom_signal' : 'bottom_signal',
+            'iq_mod:bottom_ground' : 'bottom_ground',
         }
 
         return ports
