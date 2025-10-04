@@ -81,7 +81,9 @@ class IQModulatorTestCircuit(i3.Circuit):
 
     def _default_exposed_ports(self):
         ports = {
-            'iq_mod:in' : 'in'
+            'pad_ps_in:m1' : 'pad_ps_in',
+            'pad_ps_out:m1' : 'pad_ps_out',
+            'pad_gnd:m1' : 'pad_gnd',
         }
 
         return ports
