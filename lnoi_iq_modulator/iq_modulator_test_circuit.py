@@ -2,7 +2,7 @@
 
 import ipkiss3.all as i3
 from iq_modulator_design import IQModulator
-from asp_sin_lnoi_photonics.all import GRATING_COUPLER_TE1550_RIBZ, ELECTRICAL_PAD_100100
+from asp_sin_lnoi_photonics.all import GRATING_COUPLER_TE1550_RIBZ, ELECTRICAL_PAD_100100, MetalWireTemplate
 
 class IQModulatorTestCircuit(i3.Circuit):
     def _default_insts(self):
@@ -33,11 +33,48 @@ class IQModulatorTestCircuit(i3.Circuit):
         return insts
 
     def _default_specs(self):
+        wire = MetalWireTemplate()
+
+        pad_y = -500
+
         specs = [
+            # iq modulator placement
             i3.Place('iq_mod', (0, 0)),
-            i3.Place('pad_ps_in', (-200, -500)),
-            i3.Place('pad_ps_out', (200, -500)),
-            i3.Place('pad_gnd', (0, -500)),
+
+            # pad placement
+            i3.Place('pad_ps_in', (-200, pad_y)),
+            i3.Place('pad_ps_out', (200, pad_y)),
+            i3.Place('pad_gnd', (0, pad_y)),
+
+            # pad wiring
+            i3.ConnectElectrical(
+                [("iq_mod:mzm_2_ps_2_in", "pad_ps_in:m1")],
+                trace_template=wire,
+                start_angle=-90,
+                end_angle=180,
+                control_points=[i3.H(pad_y)],
+            ),
+            i3.ConnectElectrical(
+                [("iq_mod:mzm_2_ps_2_gnd", "pad_gnd:m1")],
+                trace_template=wire,
+                start_angle=-90,
+                end_angle=90,
+                control_points=[i3.H(pad_y + 100)],
+            ),
+            i3.ConnectElectrical(
+                [("iq_mod:mzm_2_ps_out_gnd", "pad_gnd:m1")],
+                trace_template=wire,
+                start_angle=-90,
+                end_angle=90,
+                control_points=[i3.H(pad_y + 100)],
+            ),
+            i3.ConnectElectrical(
+                [("iq_mod:mzm_2_ps_out_in", "pad_ps_out:m1")],
+                trace_template=wire,
+                start_angle=-90,
+                end_angle=0,
+                control_points=[i3.H(pad_y)],
+            ),
         ]
 
         return specs
