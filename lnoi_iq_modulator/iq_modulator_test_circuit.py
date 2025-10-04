@@ -57,9 +57,14 @@ class IQModulatorTestCircuit(i3.Circuit):
             i3.Place('gc_6', (GC_X + 6 * GC_GAP, GC_Y), -90),
             i3.Place('gc_7', (GC_X + 7 * GC_GAP, GC_Y), -90),
 
-            # Grating Coupler Connection
-            i3.ConnectManhattan([('gc_0:out', 'gc_7:out')], control_points=[i3.V(-900), i3.H(1900 + 300)],
-                                bend_radius=BEND_RADIUS),
+            # Grating Coupler Connections
+            i3.ConnectManhattan([('gc_0:out', 'gc_7:out')], control_points=[i3.H(GC_Y - BEND_RADIUS - 50), i3.V(GC_X - BEND_RADIUS*2 - 50),
+                    i3.H(GC_Y + BEND_RADIUS*2 - 100), i3.V(-(GC_X - BEND_RADIUS*2 - 50)), i3.H(GC_Y - BEND_RADIUS - 50)], bend_radius=BEND_RADIUS),
+            i3.ConnectManhattan([('gc_1:out', 'gc_6:out')], control_points=[i3.H(GC_Y - BEND_RADIUS - 100), i3.V(GC_X - BEND_RADIUS*2 - 100),
+                    i3.H(GC_Y + BEND_RADIUS*2 - 50), i3.V(-(GC_X - BEND_RADIUS*2 - 100)), i3.H(GC_Y - BEND_RADIUS - 100)], bend_radius=BEND_RADIUS),
+            i3.ConnectManhattan([('gc_2:out', 'gc_5:out')], control_points=[i3.H(GC_Y - BEND_RADIUS - 150), i3.V(GC_X - BEND_RADIUS*2 - 150),
+                    i3.H(GC_Y + BEND_RADIUS*2), i3.V(-(GC_X - BEND_RADIUS*2 - 150)), i3.H(GC_Y - BEND_RADIUS - 150)], bend_radius=BEND_RADIUS),
+
             i3.ConnectManhattan([('gc_3:out', 'iq_mod:in')], control_points=[i3.H(700)], bend_radius=BEND_RADIUS),
             i3.ConnectManhattan([('gc_4:out', 'iq_mod:out')], control_points=[i3.H(700)], bend_radius=BEND_RADIUS),
 
@@ -127,11 +132,8 @@ class IQModulatorTestCircuit(i3.Circuit):
         """
 
         ports = {
-            # need to add: in, out (optical input and output)
-            # in
-            # out
-            'gc_3:out' : 'in',
-            'gc_4:out' : 'out',
+            'gc_3:vertical_in' : 'in',
+            'gc_4:vertical_in' : 'out',
 
             'pad_ps_in:m1' : 'pad_ps_in',
             'pad_gnd:m1': 'pad_gnd',
@@ -142,6 +144,14 @@ class IQModulatorTestCircuit(i3.Circuit):
             'iq_mod:middle_ground' : 'middle_ground',
             'iq_mod:bottom_signal' : 'bottom_signal',
             'iq_mod:bottom_ground' : 'bottom_ground',
+
+            # unused gcs
+            'gc_0:vertical_in' : 'gc_0',
+            'gc_1:vertical_in' : 'gc_1',
+            'gc_2:vertical_in' : 'gc_2',
+            'gc_5:vertical_in' : 'gc_5',
+            'gc_6:vertical_in' : 'gc_6',
+            'gc_7:vertical_in' : 'gc_7',
         }
 
         return ports

@@ -137,20 +137,35 @@ def simulate_modulation_PAM4(
             "sig_q": signal_q,
             "gnd4": gnd4,
 
+            # unused gcs
+            "gc_0": src_in,
+            "gc_7": src_in,
+            "gc_1": src_in,
+            "gc_6": src_in,
+            "gc_2": src_in,
+            "gc_5": src_in,
         },
         links=[
             ("src_in:out", "DUT:in"),
             ("DUT:out", "out:in"),
 
-            ("DUT:pad_ps_in", "heater_q:out"),
+            ("DUT:pad_ps_in", "ps_q_in:out"),
             ("DUT:pad_gnd", "gnd1:out"),
-            ("DUT:pad_ps_out", "mzm_right2:out"),
+            ("DUT:pad_ps_out", "ps_q_out:out"),
 
             ("DUT:top_ground", "gnd2:out"),
             ("DUT:top_signal", "sig_i:out"),
             ("DUT:middle_ground", "gnd3:out"),
             ("DUT:bottom_signal", "sig_q:out"),
             ("DUT:bottom_ground", "gnd4:out"),
+
+            # unused gcs
+            ("DUT:gc_0", "gc_0:out"),
+            ("DUT:gc_1", "gc_1:out"),
+            ("DUT:gc_2", "gc_2:out"),
+            ("DUT:gc_5", "gc_5:out"),
+            ("DUT:gc_6", "gc_6:out"),
+            ("DUT:gc_7", "gc_7:out"),
         ],
     )
 
