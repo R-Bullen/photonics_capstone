@@ -896,11 +896,11 @@ class IQModulator(i3.PCell):
             ports += i3.expose_ports(self.instances, {'bottom_phase_shifter_2:m1': 'mzm_2_ps_2_in'})
             ports += i3.expose_ports(self.instances, {'bottom_phase_shifter_2:m2': 'mzm_2_ps_2_gnd'})
 
-            # output phase shifters
-            ports += i3.expose_ports(self.instances, {'top_output_phase_shifter:m1': 'mzm_1_ps_out_in'})
-            ports += i3.expose_ports(self.instances, {'top_output_phase_shifter:m2': 'mzm_1_ps_out_gnd'})
-            ports += i3.expose_ports(self.instances, {'bottom_output_phase_shifter:m1': 'mzm_2_ps_out_in'})
-            ports += i3.expose_ports(self.instances, {'bottom_output_phase_shifter:m2': 'mzm_2_ps_out_gnd'})
+            # output phase shifters, ports mirrored from input
+            ports += i3.expose_ports(self.instances, {'top_output_phase_shifter:m1': 'mzm_1_ps_out_gnd'})
+            ports += i3.expose_ports(self.instances, {'top_output_phase_shifter:m2': 'mzm_1_ps_out_in'})
+            ports += i3.expose_ports(self.instances, {'bottom_output_phase_shifter:m1': 'mzm_2_ps_out_gnd'})
+            ports += i3.expose_ports(self.instances, {'bottom_output_phase_shifter:m2': 'mzm_2_ps_out_in'})
 
             # phase modulator (dual mzm)
             ports += i3.expose_ports(self.instances, {'phase_modulator:top_ground': 'top_ground',
