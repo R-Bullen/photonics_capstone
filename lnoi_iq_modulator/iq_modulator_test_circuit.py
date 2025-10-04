@@ -33,9 +33,9 @@ class IQModulatorTestCircuit(i3.Circuit):
         return insts
 
     def _default_specs(self):
-        specs = {
+        specs = [
             i3.Place('iq_mod', (0, 0)),
-        }
+        ]
 
         return specs
 
